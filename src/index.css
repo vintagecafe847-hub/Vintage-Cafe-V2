@@ -1,0 +1,306 @@
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Prata:wght@400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS for enhanced styling */
+
+/* Root variables for consistent theming */
+:root {
+  --primary-brown: #8b6f47;
+  --dark-brown: #5d4e37;
+  --light-brown: #a0845c;
+  --cream-white: #f7f5f3;
+  --soft-beige: #e8e2da;
+  --gold-tone: #c9a876;
+  --warm-gray: #8e8680;
+}
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Typography */
+.font-serif {
+  /* Use Supabase dark background (#18181b) and emerald primary (#059669) */
+  /* HSL approximations: #18181b -> 240 6% 10%, #059669 -> 161 94% 30% */
+  --background: 240 6% 10%; /* supabase dark */
+  --foreground: 210 40% 98%;
+  /* Neutral dark grey for cards/dialogs to avoid bluish tint */
+  --card: 0 0% 12%;
+  --card-foreground: 210 40% 98%;
+  --popover: 0 0% 12%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 161 94% 30%; /* emerald */
+  --primary-foreground: 210 40% 98%;
+  --secondary: 215 14% 20%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 215 14% 20%;
+  --muted-foreground: 215 20% 65.1%;
+  --accent: 161 94% 30%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 0 0% 18%;
+  --input: 0 0% 14%;
+  --ring: 161 94% 40%;
+  --chart-1: 220 70% 50%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 30 80% 55%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 340 75% 55%;
+  background: var(--dark-brown);
+}
+
+/* Dark mode support for admin panel */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 161 94% 30%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 5% 90%;
+    --input: 240 5% 90%;
+    --ring: 161 94% 40%;
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 240 6% 10%; /* neutral zinc-like dark bg (#18181b) */
+    --foreground: 210 40% 98%;
+    --card: 240 5% 12%;
+    --card-foreground: 210 40% 98%;
+    --popover: 240 5% 12%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 161 94% 40%; /* emerald */
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 240 5% 16%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 240 5% 16%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 240 5% 16%; /* hover/ghost/outline bg should be gray, not blue */
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 4% 20%;
+    --input: 240 4% 18%;
+    --ring: 161 94% 45%; /* emerald focus ring */
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Utility classes */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Animation enhancements */
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced button styles */
+.btn-primary {
+  @apply px-6 py-3 font-semibold text-white transition-all duration-300 transform rounded-full shadow-lg bg-emerald-600 hover:bg-emerald-700 hover:scale-105 hover:shadow-xl;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 font-semibold transition-all duration-300 border-2 rounded-full border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white;
+}
+
+/* Enhanced card styles */
+.card {
+  @apply p-6 transition-shadow duration-300 bg-white shadow-lg rounded-xl hover:shadow-xl;
+}
+
+/* Gradient overlays */
+.gradient-overlay {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 111, 71, 0.1) 0%,
+    rgba(201, 168, 118, 0.1) 100%
+  );
+}
+
+/* Focus states for accessibility */
+button:focus,
+a:focus {
+  @apply outline-2 outline-emerald-600 outline-offset-2;
+}
+
+/* Loading animations */
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .text-responsive {
+    font-size: clamp(1rem, 4vw, 1.25rem);
+  }
+
+  .title-responsive {
+    font-size: clamp(1.5rem, 6vw, 2.5rem);
+  }
+}
+
+/* Performance optimizations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.gpu-acceleration {
+  transform: translateZ(0);
+}
+
+/* Hide scrollbar while keeping functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Smooth horizontal scroll for story section */
+.horizontal-scroll {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+/* Custom organic shapes */
+.organic-shape-1 {
+  clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);
+}
+
+.organic-shape-2 {
+  clip-path: polygon(0% 0%, 75% 0%, 100% 100%, 25% 100%);
+}
+
+/* Subtle moving glow balls for decorative accents (desktop only via md utility) */
+.glow-ball {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(28px);
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+  opacity: 0.85;
+  animation: floatX 8s ease-in-out infinite alternate;
+}
+
+.glow-gold {
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 215, 0, 0.95),
+    /* strong gold center */ rgba(255, 200, 0, 0.7) 35%,
+    /* vivid golden-yellow */ rgba(255, 180, 0, 0.25) 65%,
+    /* softer fade */ transparent 100%
+  );
+}
+
+.glow-pink {
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 150, 180, 0.95),
+    rgba(255, 150, 180, 0.6) 40%,
+    rgba(255, 150, 180, 0.12) 70%,
+    transparent 100%
+  );
+}
+
+.glow-green {
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(84, 195, 153, 0.9),
+    rgba(84, 195, 153, 0.55) 40%,
+    rgba(84, 195, 153, 0.12) 70%,
+    transparent 100%
+  );
+}
+
+@keyframes floatX {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate3d(28px, -14px, 0) scale(1.03);
+    opacity: 0.72;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.86;
+  }
+}
+
+/* Variations for pacing */
+.glow-slower {
+  animation-duration: 11s;
+}
+.glow-faster {
+  animation-duration: 6.5s;
+}

@@ -1,0 +1,196 @@
+{
+  "Signature Drinks": [
+    {
+      "name": "Mocha / White Mocha",
+      "sizes": {
+        "12oz": 5.25,
+        "16oz": 5.75,
+        "20oz": 6.0,
+        "24oz": 6.5,
+        "32oz": 7.5
+      }
+    },
+    {
+      "name": "Caramel Macchiato",
+      "sizes": {
+        "12oz": 5.5,
+        "16oz": 6.0,
+        "20oz": 6.5,
+        "24oz": 6.75,
+        "32oz": 7.75
+      }
+    },
+    {
+      "name": "Keto Coffee",
+      "sizes": {
+        "12oz": 5.25,
+        "16oz": 6.25,
+        "20oz": 7.0,
+        "24oz": 7.75,
+        "32oz": 7.75
+      }
+    },
+    {
+      "name": "Breve",
+      "sizes": {
+        "12oz": 6.0,
+        "16oz": 6.5,
+        "20oz": 7.0,
+        "24oz": 7.5,
+        "32oz": 8.25
+      }
+    },
+    {
+      "name": "Dirty Chai (w/ Espresso)",
+      "sizes": {
+        "12oz": 6.0,
+        "16oz": 6.5,
+        "20oz": 7.0,
+        "24oz": 7.5,
+        "32oz": 8.25
+      }
+    },
+    {
+      "name": "Matcha Latte",
+      "sizes": {
+        "12oz": 6.0,
+        "16oz": 6.5,
+        "20oz": 7.0,
+        "24oz": 7.5,
+        "32oz": 8.25
+      }
+    }
+  ],
+  "Espresso Drinks": [
+    {
+      "name": "Drip",
+      "sizes": { "12oz": 3.5, "16oz": 3.75, "20oz": 4.0, "24oz": 4.75 }
+    },
+    {
+      "name": "Americano",
+      "sizes": {
+        "12oz": 4.25,
+        "16oz": 4.5,
+        "20oz": 5.0,
+        "24oz": 5.5,
+        "32oz": 6.25
+      }
+    },
+    {
+      "name": "Cold Brew",
+      "sizes": {
+        "12oz": 4.5,
+        "16oz": 5.0,
+        "20oz": 5.5,
+        "24oz": 6.0,
+        "32oz": 6.75
+      }
+    },
+    {
+      "name": "Latte",
+      "sizes": {
+        "12oz": 5.0,
+        "16oz": 5.5,
+        "20oz": 6.0,
+        "24oz": 6.5,
+        "32oz": 7.25
+      }
+    },
+    {
+      "name": "Cappuccino",
+      "sizes": {
+        "12oz": 5.0,
+        "16oz": 5.5,
+        "20oz": 6.0,
+        "24oz": 6.5,
+        "32oz": 7.25
+      }
+    }
+  ],
+  "Tea & Chai": [
+    {
+      "name": "Chai Tea Latte",
+      "sizes": {
+        "12oz": 5.15,
+        "16oz": 5.65,
+        "20oz": 6.25,
+        "24oz": 6.75,
+        "32oz": 7.25
+      }
+    },
+    {
+      "name": "Tea (Hot or Iced)",
+      "sizes": { "12oz": 4.5, "16oz": 5.25, "20oz": 5.75, "24oz": 6.25 }
+    }
+  ],
+  "Energy & Non-Coffee": [
+    {
+      "name": "Lotus Energy",
+      "sizes": {
+        "12oz": 5.25,
+        "16oz": 6.25,
+        "20oz": 6.75,
+        "24oz": 7.25,
+        "32oz": 8.25
+      }
+    },
+    {
+      "name": "Rockstar",
+      "sizes": { "12oz": 6.25, "16oz": 6.75, "20oz": 7.25, "24oz": 8.25 }
+    },
+    {
+      "name": "Red Bull",
+      "sizes": { "12oz": 7.25, "16oz": 7.5, "20oz": 8.25, "24oz": 9.25 }
+    },
+    {
+      "name": "Hot Chocolate",
+      "sizes": {
+        "8oz": 3.0,
+        "12oz": 3.75,
+        "16oz": 4.25,
+        "20oz": 4.75,
+        "24oz": 5.25
+      }
+    },
+    {
+      "name": "Steamer",
+      "sizes": {
+        "8oz": 3.0,
+        "12oz": 3.75,
+        "16oz": 4.25,
+        "20oz": 4.75,
+        "24oz": 5.25
+      }
+    },
+    {
+      "name": "Italian Soda",
+      "sizes": {
+        "12oz": 4.75,
+        "16oz": 5.25,
+        "20oz": 5.75,
+        "24oz": 6.25,
+        "32oz": 7.25
+      }
+    },
+    {
+      "name": "Sparkling Coconut Lavender Lemonade",
+      "sizes": {
+        "12oz": 5.25,
+        "16oz": 6.0,
+        "20oz": 6.5,
+        "24oz": 7.0,
+        "32oz": 8.0
+      }
+    }
+  ],
+  "Food": [
+    { "name": "Lumber Jack", "price": 6.95 },
+    { "name": "The Cowboy", "price": 6.95 },
+    { "name": "Bacon Omlett", "price": 6.95 },
+    { "name": "Bolt Burrito", "price": 6.95 },
+    { "name": "FB Turkey", "price": 9.95 },
+    { "name": "Molly's Hero", "price": 9.95 },
+    { "name": "Protein Pack", "price": 6.5 },
+    { "name": "Apple Cider (16oz)", "price": 4.75 }
+  ]
+}

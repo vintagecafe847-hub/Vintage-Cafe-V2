@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" 
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+  
+  <!-- Main page -->
+  <url>
+    <loc>https://vintagecafeschaumburg.com/</loc>
+    <lastmod>2025-08-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://vintagecafeschaumburg.com/images/hero.jpeg</image:loc>
+      <image:caption>Vintage Cafe Schaumburg interior showing cozy vintage aesthetic</image:caption>
+      <image:title>Vintage Cafe Schaumburg Main Interior</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://vintagecafeschaumburg.com/images/cozy.jpg</image:loc>
+      <image:caption>Cozy seating area with fireplace at Vintage Cafe</image:caption>
+      <image:title>Vintage Cafe Cozy Seating Area</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://vintagecafeschaumburg.com/images/inside/vintage-cafe-schaumburg-cozy-cafe-inside.jpg</image:loc>
+      <image:caption>Interior view of Vintage Cafe Schaumburg</image:caption>
+      <image:title>Vintage Cafe Interior</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://vintagecafeschaumburg.com/images/outside/vintage-cafe-outside1.jpg</image:loc>
+      <image:caption>Exterior view of Vintage Cafe located at 105 E Schaumburg Rd</image:caption>
+      <image:title>Vintage Cafe Exterior</image:title>
+    </image:image>
+  </url>
+  
+  <!-- About section -->
+  <url>
+    <loc>https://vintagecafeschaumburg.com/#about</loc>
+    <lastmod>2025-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Menu section -->
+  <url>
+    <loc>https://vintagecafeschaumburg.com/#menu</loc>
+    <lastmod>2025-08-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Contact section -->
+  <url>
+    <loc>https://vintagecafeschaumburg.com/#contact</loc>
+    <lastmod>2025-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>

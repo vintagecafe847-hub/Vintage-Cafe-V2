@@ -1,0 +1,3016 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { supabase, type Category, type MenuItem } from '../lib/supabase';
+import type { User } from '@supabase/supabase-js';
+
+// Additional types for Sizes and Attributes
+export interface Size {
+  id: string;
+  name: string;
+  description?: string;
+  price_adjustment: number;
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Attribute {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MenuItemSize {
+  id: string;
+  menu_item_id: string;
+  size_id: string;
+  price_override?: number;
+  is_active: boolean;
+  size: Size;
+}
+
+export interface CustomSize {
+  name: string;
+  price: number;
+}
+
+export interface MenuItemAttribute {
+  id: string;
+  menu_item_id: string;
+  attribute_id: string;
+  is_active: boolean;
+  attribute: Attribute;
+}
+
+import { z } from 'zod';
+import { Button } from '../components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
+// ...existing code... (removed unused Switch and Badge imports)
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Textarea } from '../components/ui/textarea';
+import {
+  Plus,
+  Edit,
+  Eye,
+  EyeOff,
+  Trash2,
+  LogOut,
+  Sun,
+  Moon,
+  Coffee,
+  Grid3X3,
+  Menu as MenuIcon,
+  X,
+  GripVertical,
+  Sparkles,
+  Heart,
+  Tag,
+  ChevronLeft,
+  ChevronRight,
+  Ruler,
+} from 'lucide-react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+// Form schemas
+const categorySchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+});
+
+const menuItemSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+  price: z.preprocess((val) => {
+    if (typeof val === 'string') return parseFloat(val.replace(',', '.'));
+    return val;
+  }, z.number().min(0, 'Price must be positive')),
+  category_id: z.string().min(1, 'Category is required'),
+  tags: z.array(z.string()).optional(),
+  pricing_type: z.enum(['fixed', 'consistent_size', 'custom_size']),
+  selected_sizes: z
+    .array(
+      z.object({
+        size_id: z.string(),
+        price: z.preprocess((val) => {
+          if (typeof val === 'string') return parseFloat(val.replace(',', '.'));
+          return val;
+        }, z.number()),
+      })
+    )
+    .optional(),
+  custom_sizes: z
+    .array(
+      z.object({
+        name: z.string(),
+        price: z.preprocess((val) => {
+          if (typeof val === 'string') return parseFloat(val.replace(',', '.'));
+          return val;
+        }, z.number()),
+      })
+    )
+    .optional(),
+});
+
+const sizeSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+  price_adjustment: z.preprocess((val) => {
+    if (typeof val === 'string') return parseFloat(val.replace(',', '.'));
+    return val;
+  }, z.number()),
+});
+
+const attributeSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+  color: z.string().optional(),
+});
+
+type CategoryForm = z.infer<typeof categorySchema>;
+type MenuItemForm = z.infer<typeof menuItemSchema>;
+type SizeForm = z.infer<typeof sizeSchema>;
+type AttributeForm = z.infer<typeof attributeSchema>;
+
+const AdminPage = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [sizes, setSizes] = useState<Size[]>([]);
+  const [attributes, setAttributes] = useState<Attribute[]>([]);
+
+  const [selectedSizes, setSelectedSizes] = useState<
+    Array<{ size_id: string; price: number }>
+  >([]);
+  const [customSizes, setCustomSizes] = useState<
+    Array<{ name: string; price: number }>
+  >([]);
+  const [pricingType, setPricingType] = useState<
+    'fixed' | 'consistent_size' | 'custom_size'
+  >('fixed');
+  // Deletion dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name?: string;
+    type: 'size' | 'attribute';
+  } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Check localStorage first, then system preference
+    const stored = localStorage.getItem('admin-dark-mode');
+    if (stored !== null) return JSON.parse(stored);
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<
+    Category | MenuItem | Size | Attribute | null
+  >(null);
+  const [activeTab, setActiveTab] = useState('categories');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  // Pagination: show 6 items per page with prev/next
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  // Loading state specifically for fetching admin data (categories, items, etc.)
+  const [dataLoading, setDataLoading] = useState(true);
+  const [draggedItem, setDraggedItem] = useState<MenuItem | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [draggedCategory, setDraggedCategory] = useState<Category | null>(null);
+  const [categoryDragOverIndex, setCategoryDragOverIndex] = useState<
+    number | null
+  >(null);
+  // Individual loading states for item updates
+  const [updatingCategories, setUpdatingCategories] = useState<Set<string>>(
+    new Set()
+  );
+  const [confirmingDeleteImageCategory, setConfirmingDeleteImageCategory] =
+    useState<string | null>(null);
+  const [confirmingDeleteCategory, setConfirmingDeleteCategory] = useState<
+    string | null
+  >(null);
+  const [updatingMenuItems, setUpdatingMenuItems] = useState<Set<string>>(
+    new Set()
+  );
+  const [updatingSizes, setUpdatingSizes] = useState<Set<string>>(new Set());
+  const [updatingAttributes, setUpdatingAttributes] = useState<Set<string>>(
+    new Set()
+  );
+  const [menuItemSaving, setMenuItemSaving] = useState(false);
+  const [sizeSaving, setSizeSaving] = useState(false);
+  const [attributeSaving, setAttributeSaving] = useState(false);
+  const navigate = useNavigate();
+
+  // Helper to format currency as requested (two decimals + $)
+  const formatCurrency = (n: number | null | undefined) => {
+    if (n === null || n === undefined || Number.isNaN(Number(n)))
+      return '0.00$';
+    try {
+      return `${Number(n).toFixed(2)}$`;
+    } catch {
+      return '0.00$';
+    }
+  };
+
+  // Category form
+  const categoryForm = useForm<CategoryForm>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: '',
+      description: '',
+    },
+  });
+
+  // Menu item form
+  const menuItemForm = useForm<MenuItemForm>({
+    resolver: zodResolver(menuItemSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      price: 0,
+      category_id: '',
+      tags: [],
+      pricing_type: 'fixed',
+      selected_sizes: [],
+      custom_sizes: [],
+    },
+  });
+
+  // Size form
+  const sizeForm = useForm<SizeForm>({
+    resolver: zodResolver(sizeSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      price_adjustment: 0,
+    },
+  });
+
+  // Attribute form
+  const attributeForm = useForm<AttributeForm>({
+    resolver: zodResolver(attributeSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      color: '',
+    },
+  });
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem('admin-dark-mode', JSON.stringify(newMode));
+  };
+
+  // Apply dark mode to document
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (user && user.email === 'theshiplapshopcoffeehouse@gmail.com') {
+      fetchData();
+    } else {
+      // If there's no user or user is not admin, clear any existing data and
+      // mark admin-data as not loading so the UI doesn't show a spinner.
+      setCategories([]);
+      setMenuItems([]);
+      setSizes([]);
+      setAttributes([]);
+      setDataLoading(false);
+    }
+  }, [user]);
+
+  // ...existing code...
+
+  const fetchData = async () => {
+    setDataLoading(true);
+    try {
+      // Fetch categories
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('categories')
+        .select('*')
+        .order('display_order', { ascending: true });
+      if (categoriesError) throw categoriesError;
+
+      // Fetch menu items with categories
+      const { data: menuItemsData, error: menuItemsError } = await supabase
+        .from('menu_items')
+        .select(
+          `
+    *,
+    category:categories(*),
+    menu_item_sizes(*, size:sizes(*))
+  `
+        )
+        .order('display_order', { ascending: true });
+      if (menuItemsError) throw menuItemsError;
+
+      // Fetch sizes
+      const { data: sizesData, error: sizesError } = await supabase
+        .from('sizes')
+        .select('*')
+        .order('display_order', { ascending: true });
+      if (sizesError) throw sizesError;
+      // (removed stray token)
+
+      // Fetch attributes
+      const { data: attributesData, error: attributesError } = await supabase
+        .from('attributes')
+        .select('*')
+        .order('display_order', { ascending: true });
+      if (attributesError) throw attributesError;
+
+      setCategories(categoriesData || []);
+      setMenuItems(menuItemsData || []);
+      setSizes(sizesData || []);
+      setAttributes(attributesData || []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
+  // Image upload utility function
+  const uploadImage = async (
+    file: File,
+    folder: string = 'category-images'
+  ) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `${folder}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(filePath);
+
+    return urlData.publicUrl;
+  };
+
+  // Delete image from storage
+  const deleteImage = async (imageUrl: string) => {
+    if (!imageUrl) return;
+
+    // Extract file path from URL
+    const url = new URL(imageUrl);
+    const pathParts = url.pathname.split('/');
+    const filePath = pathParts.slice(-2).join('/'); // Get folder/filename
+
+    const { error } = await supabase.storage
+      .from('product-images')
+      .remove([filePath]);
+
+    if (error) console.warn('Error deleting image:', error);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const onCategorySubmit = async (data: CategoryForm) => {
+    try {
+      setUploadingImage(true);
+      let imageUrl = '';
+
+      // Handle image upload
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile, 'category-images');
+      }
+
+      if (editingItem && 'category_id' in editingItem === false) {
+        // Update category
+        const updateData = {
+          ...data,
+          image_url: undefined as string | undefined,
+        };
+        if (imageUrl) {
+          // Delete old image if exists
+          if ((editingItem as Category).image_url) {
+            await deleteImage((editingItem as Category).image_url!);
+          }
+          updateData.image_url = imageUrl;
+        }
+
+        const { error } = await supabase
+          .from('categories')
+          .update(updateData)
+          .eq('id', editingItem.id);
+
+        if (error) throw error;
+      } else {
+        // Create category - get next display order
+        const { data: maxOrderData } = await supabase
+          .from('categories')
+          .select('display_order')
+          .order('display_order', { ascending: false })
+          .limit(1);
+
+        const nextOrder =
+          maxOrderData && maxOrderData.length > 0
+            ? maxOrderData[0].display_order + 1
+            : 1;
+
+        const { error } = await supabase.from('categories').insert([
+          {
+            ...data,
+            image_url: imageUrl || null,
+            is_active: true,
+            display_order: nextOrder,
+          },
+        ]);
+
+        if (error) throw error;
+      }
+
+      await fetchData();
+      setIsDialogOpen(false);
+      setEditingItem(null);
+      setImageFile(null);
+      categoryForm.reset();
+    } catch (error) {
+      console.error('Error saving category:', error);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const onMenuItemSubmit = async (data: MenuItemForm) => {
+    try {
+      setMenuItemSaving(true);
+      const formattedData = {
+        name: data.name,
+        description: data.description,
+        category_id: data.category_id,
+        tags: data.tags || null,
+        pricing_type: pricingType,
+        custom_sizes: pricingType === 'custom_size' ? customSizes : null,
+        price:
+          pricingType === 'fixed'
+            ? data.price
+            : pricingType === 'consistent_size' && selectedSizes.length > 0
+            ? Math.min(...selectedSizes.map((s) => s.price))
+            : pricingType === 'custom_size' && customSizes.length > 0
+            ? Math.min(...customSizes.map((s) => s.price))
+            : data.price,
+      };
+
+      let menuItemId: string;
+
+      if (editingItem && 'category_id' in editingItem) {
+        // Update menu item
+        const { error } = await supabase
+          .from('menu_items')
+          .update(formattedData)
+          .eq('id', editingItem.id);
+
+        if (error) throw error;
+        menuItemId = editingItem.id;
+
+        // Delete existing menu_item_sizes if changing pricing type
+        if (pricingType !== 'consistent_size') {
+          await supabase
+            .from('menu_item_sizes')
+            .delete()
+            .eq('menu_item_id', menuItemId);
+        }
+      } else {
+        // Create menu item - get next display order
+        const { data: maxOrderData } = await supabase
+          .from('menu_items')
+          .select('display_order')
+          .eq('category_id', data.category_id)
+          .order('display_order', { ascending: false })
+          .limit(1);
+
+        const nextOrder =
+          maxOrderData && maxOrderData.length > 0
+            ? maxOrderData[0].display_order + 1
+            : 1;
+
+        const { data: insertData, error } = await supabase
+          .from('menu_items')
+          .insert([
+            { ...formattedData, is_active: true, display_order: nextOrder },
+          ])
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        menuItemId = insertData.id;
+      }
+
+      // Handle consistent sizes
+      if (pricingType === 'consistent_size' && selectedSizes.length > 0) {
+        // Delete existing menu_item_sizes first
+        await supabase
+          .from('menu_item_sizes')
+          .delete()
+          .eq('menu_item_id', menuItemId);
+
+        // Insert new menu_item_sizes
+        const menuItemSizes = selectedSizes.map((size) => ({
+          menu_item_id: menuItemId,
+          size_id: size.size_id,
+          price_override: size.price,
+          is_active: true,
+        }));
+
+        const { error: sizesError } = await supabase
+          .from('menu_item_sizes')
+          .insert(menuItemSizes);
+
+        if (sizesError) throw sizesError;
+      }
+
+      await fetchData();
+      setIsDialogOpen(false);
+      setEditingItem(null);
+      setPricingType('fixed');
+      setSelectedSizes([]);
+      setCustomSizes([]);
+      menuItemForm.reset();
+    } catch (error) {
+      console.error('Error saving menu item:', error);
+    } finally {
+      setMenuItemSaving(false);
+    }
+  };
+
+  const onSizeSubmit = async (data: SizeForm) => {
+    setSizeSaving(true);
+    try {
+      if (editingItem && 'price_adjustment' in editingItem) {
+        // Update size
+        const { error } = await supabase
+          .from('sizes')
+          .update(data)
+          .eq('id', editingItem.id);
+
+        if (error) throw error;
+      } else {
+        // Create size - get next display order
+        const { data: maxOrderData } = await supabase
+          .from('sizes')
+          .select('display_order')
+          .order('display_order', { ascending: false })
+          .limit(1);
+
+        const nextOrder =
+          maxOrderData && maxOrderData.length > 0
+            ? maxOrderData[0].display_order + 1
+            : 1;
+
+        const { error } = await supabase.from('sizes').insert([
+          {
+            ...data,
+            is_active: true,
+            display_order: nextOrder,
+          },
+        ]);
+
+        if (error) throw error;
+      }
+
+      await fetchData();
+      setIsDialogOpen(false);
+      setEditingItem(null);
+      sizeForm.reset();
+    } catch (error) {
+      console.error('Error saving size:', error);
+    } finally {
+      setSizeSaving(false);
+    }
+  };
+
+  const onAttributeSubmit = async (data: AttributeForm) => {
+    setAttributeSaving(true);
+    try {
+      if (editingItem && 'color' in editingItem) {
+        // Update attribute
+        const { error } = await supabase
+          .from('attributes')
+          .update(data)
+          .eq('id', editingItem.id);
+
+        if (error) throw error;
+      } else {
+        // Create attribute - get next display order
+        const { data: maxOrderData } = await supabase
+          .from('attributes')
+          .select('display_order')
+          .order('display_order', { ascending: false })
+          .limit(1);
+
+        const nextOrder =
+          maxOrderData && maxOrderData.length > 0
+            ? maxOrderData[0].display_order + 1
+            : 1;
+
+        const { error } = await supabase.from('attributes').insert([
+          {
+            ...data,
+            is_active: true,
+            display_order: nextOrder,
+          },
+        ]);
+
+        if (error) throw error;
+      }
+
+      await fetchData();
+      setIsDialogOpen(false);
+      setEditingItem(null);
+      attributeForm.reset();
+    } catch (error) {
+      console.error('Error saving attribute:', error);
+    } finally {
+      setAttributeSaving(false);
+    }
+  };
+
+  const deleteCategory = async (id: string) => {
+    try {
+      setUpdatingCategories((prev) => new Set(prev).add(id));
+
+      const { error } = await supabase.from('categories').delete().eq('id', id);
+
+      if (error) throw error;
+      await fetchData();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+    } finally {
+      setUpdatingCategories((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      setConfirmingDeleteCategory(null);
+    }
+  };
+
+  // Handle deleting only the category image (storage + db field)
+  const handleDeleteCategoryImage = async (category: Category) => {
+    if (!category.image_url) return;
+
+    try {
+      // mark as updating visually
+      setUpdatingCategories((prev) => new Set(prev).add(category.id));
+
+      // delete from storage
+      await deleteImage(category.image_url);
+
+      // clear image_url on category row
+      const { error } = await supabase
+        .from('categories')
+        .update({ image_url: null })
+        .eq('id', category.id);
+      if (error) throw error;
+
+      await fetchData();
+    } catch (err) {
+      console.error('Error deleting category image:', err);
+    } finally {
+      setUpdatingCategories((prev) => {
+        const next = new Set(prev);
+        next.delete(category.id);
+        return next;
+      });
+      setConfirmingDeleteImageCategory(null);
+    }
+  };
+
+  // Trigger the hidden file input for a specific category
+  const triggerCategoryImageSelect = (
+    categoryId: string,
+    e?: React.MouseEvent
+  ) => {
+    e?.stopPropagation();
+    const el = document.getElementById(
+      `cat-image-input-${categoryId}`
+    ) as HTMLInputElement | null;
+    if (el) el.click();
+  };
+
+  // Handle file selection for updating a category image
+  const handleCategoryImageChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    category: Category
+  ) => {
+    e.stopPropagation();
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      setUpdatingCategories((prev) => new Set(prev).add(category.id));
+
+      // upload new image
+      const newUrl = await uploadImage(file, 'category-images');
+
+      // delete old image if present
+      if (category.image_url) {
+        try {
+          await deleteImage(category.image_url);
+        } catch (err) {
+          console.warn('Failed deleting old image (continuing):', err);
+        }
+      }
+
+      // update db row
+      const { error } = await supabase
+        .from('categories')
+        .update({ image_url: newUrl })
+        .eq('id', category.id);
+      if (error) throw error;
+
+      await fetchData();
+    } catch (err) {
+      console.error('Error updating category image:', err);
+    } finally {
+      setUploadingImage(false);
+      setUpdatingCategories((prev) => {
+        const next = new Set(prev);
+        next.delete(category.id);
+        return next;
+      });
+      // clear the input value so the same file can be selected again if needed
+      const el = document.getElementById(
+        `cat-image-input-${category.id}`
+      ) as HTMLInputElement | null;
+      if (el) el.value = '';
+    }
+  };
+
+  const deleteMenuItem = async (id: string) => {
+    if (confirm('Are you sure you want to delete this menu item?')) {
+      try {
+        const { error } = await supabase
+          .from('menu_items')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        await fetchData();
+      } catch (error) {
+        console.error('Error deleting menu item:', error);
+      }
+    }
+  };
+
+  // Generic delete flow for sizes and attributes with confirmation dialog
+  const requestDelete = (
+    id: string,
+    name: string | undefined,
+    type: 'size' | 'attribute'
+  ) => {
+    setDeleteTarget({ id, name, type });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    const { id, type } = deleteTarget;
+    try {
+      setDeleteLoading(true);
+      const table = type === 'size' ? 'sizes' : 'attributes';
+      const { error } = await supabase.from(table).delete().eq('id', id);
+      if (error) throw error;
+      await fetchData();
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    } finally {
+      setDeleteLoading(false);
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
+    }
+  };
+
+  const toggleItemStatus = async (
+    id: string,
+    isActive: boolean,
+    type: 'category' | 'menu_item' | 'size' | 'attribute'
+  ) => {
+    // Set loading state for the specific item
+    if (type === 'category') {
+      setUpdatingCategories((prev) => new Set(prev).add(id));
+    } else if (type === 'menu_item') {
+      setUpdatingMenuItems((prev) => new Set(prev).add(id));
+    } else if (type === 'size') {
+      setUpdatingSizes((prev) => new Set(prev).add(id));
+    } else if (type === 'attribute') {
+      setUpdatingAttributes((prev) => new Set(prev).add(id));
+    }
+
+    // Optimistically update local state
+    if (type === 'category') {
+      setCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === id ? { ...cat, is_active: isActive } : cat
+        )
+      );
+    } else if (type === 'menu_item') {
+      setMenuItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, is_active: isActive } : item
+        )
+      );
+    } else if (type === 'size') {
+      setSizes((prev) =>
+        prev.map((size) =>
+          size.id === id ? { ...size, is_active: isActive } : size
+        )
+      );
+    } else if (type === 'attribute') {
+      setAttributes((prev) =>
+        prev.map((attr) =>
+          attr.id === id ? { ...attr, is_active: isActive } : attr
+        )
+      );
+    }
+
+    try {
+      const table =
+        type === 'category'
+          ? 'categories'
+          : type === 'menu_item'
+          ? 'menu_items'
+          : type === 'size'
+          ? 'sizes'
+          : 'attributes';
+      const { error } = await supabase
+        .from(table)
+        .update({ is_active: isActive })
+        .eq('id', id);
+
+      if (error) throw error;
+      // Success - local state is already updated
+    } catch (error) {
+      console.error('Error updating status:', error);
+      // Revert optimistic update on error
+      if (type === 'category') {
+        setCategories((prev) =>
+          prev.map((cat) =>
+            cat.id === id ? { ...cat, is_active: !isActive } : cat
+          )
+        );
+      } else if (type === 'menu_item') {
+        setMenuItems((prev) =>
+          prev.map((item) =>
+            item.id === id ? { ...item, is_active: !isActive } : item
+          )
+        );
+      } else if (type === 'size') {
+        setSizes((prev) =>
+          prev.map((size) =>
+            size.id === id ? { ...size, is_active: !isActive } : size
+          )
+        );
+      } else if (type === 'attribute') {
+        setAttributes((prev) =>
+          prev.map((attr) =>
+            attr.id === id ? { ...attr, is_active: !isActive } : attr
+          )
+        );
+      }
+    } finally {
+      // Remove loading state for the specific item
+      if (type === 'category') {
+        setUpdatingCategories((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(id);
+          return newSet;
+        });
+      } else if (type === 'menu_item') {
+        setUpdatingMenuItems((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(id);
+          return newSet;
+        });
+      } else if (type === 'size') {
+        setUpdatingSizes((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(id);
+          return newSet;
+        });
+      } else if (type === 'attribute') {
+        setUpdatingAttributes((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(id);
+          return newSet;
+        });
+      }
+    }
+  };
+
+  // Handle drag and drop for menu items
+  const handleDragStart = (item: MenuItem) => {
+    setDraggedItem(item);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+
+    if (!draggedItem) return;
+
+    const filteredItems = menuItems.filter(
+      (item) => !selectedCategory || item.category_id === selectedCategory
+    );
+    const draggedIndex = filteredItems.findIndex(
+      (item) => item.id === draggedItem.id
+    );
+
+    if (draggedIndex === targetIndex) return;
+
+    try {
+      // Reorder items
+      const reorderedItems = [...filteredItems];
+      const [removed] = reorderedItems.splice(draggedIndex, 1);
+      reorderedItems.splice(targetIndex, 0, removed);
+
+      // Update display_order for all affected items
+      const updates = reorderedItems.map((item, index) => ({
+        id: item.id,
+        display_order: index + 1,
+      }));
+
+      for (const update of updates) {
+        await supabase
+          .from('menu_items')
+          .update({ display_order: update.display_order })
+          .eq('id', update.id);
+      }
+
+      await fetchData();
+    } catch (error) {
+      console.error('Error reordering items:', error);
+    }
+
+    setDraggedItem(null);
+  };
+
+  // Handle drag and drop for categories
+  const handleCategoryDragStart = (category: Category) => {
+    setDraggedCategory(category);
+  };
+
+  const handleCategoryDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setCategoryDragOverIndex(index);
+  };
+
+  const handleCategoryDragLeave = () => {
+    setCategoryDragOverIndex(null);
+  };
+
+  const handleCategoryDrop = async (
+    e: React.DragEvent,
+    targetIndex: number
+  ) => {
+    e.preventDefault();
+    setCategoryDragOverIndex(null);
+
+    if (!draggedCategory) return;
+
+    const draggedIndex = categories.findIndex(
+      (cat) => cat.id === draggedCategory.id
+    );
+
+    if (draggedIndex === targetIndex) return;
+
+    try {
+      // Reorder categories
+      const reorderedCategories = [...categories];
+      const [removed] = reorderedCategories.splice(draggedIndex, 1);
+      reorderedCategories.splice(targetIndex, 0, removed);
+
+      // Update display_order for all categories
+      const updates = reorderedCategories.map((category, index) => ({
+        id: category.id,
+        display_order: index + 1,
+      }));
+
+      for (const update of updates) {
+        await supabase
+          .from('categories')
+          .update({ display_order: update.display_order })
+          .eq('id', update.id);
+      }
+
+      await fetchData();
+    } catch (error) {
+      console.error('Error reordering categories:', error);
+    }
+
+    setDraggedCategory(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-zinc-950">
+        <div className="w-32 h-32 border-b-2 rounded-full animate-spin border-emerald-500"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    const redirectToUrl =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/admin`
+        : '/admin';
+
+    return (
+      <div className="min-h-screen bg-white dark:bg-zinc-950">
+        <div className="container px-4 py-16 mx-auto">
+          <div className="max-w-md mx-auto">
+            <Card className="p-6 bg-white border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
+              <CardHeader className="pb-2">
+                <div className="flex flex-col items-center">
+                  <img
+                    src="/white-logo.png"
+                    alt="Shiplap Shop"
+                    className="object-contain w-20 h-20 mb-3"
+                  />
+                  <CardTitle className="text-center text-zinc-900 dark:text-zinc-100">
+                    Admin Login
+                  </CardTitle>
+                  <p className="max-w-xs mt-2 text-sm text-center text-zinc-600 dark:text-zinc-400">
+                    Sign in with the Google account authorized for the admin
+                    panel.
+                  </p>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="w-full mx-auto">
+                  <Auth
+                    supabaseClient={supabase}
+                    appearance={{ theme: ThemeSupa }}
+                    providers={['google']}
+                    redirectTo={redirectToUrl}
+                  />
+                  <p className="mt-4 text-xs text-center text-zinc-500 dark:text-zinc-400">
+                    Only Google sign-in is allowed here.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.email !== 'theshiplapshopcoffeehouse@gmail.com') {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-zinc-950">
+        <Card className="max-w-md mx-auto bg-white border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
+          <CardHeader>
+            <CardTitle className="text-red-600 dark:text-red-400">
+              Access Denied
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4 text-zinc-700 dark:text-zinc-300">
+              You don't have permission to access the admin panel.
+            </p>
+            <Button
+              onClick={handleSignOut}
+              variant="outline"
+              className="text-zinc-700 border-zinc-300 dark:border-zinc-600 dark:text-zinc-300"
+            >
+              Sign Out
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen">
+      {/* Mobile Sidebar Overlay */}
+      {mobileSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed lg:static inset-y-0 left-0 z-50 flex flex-col
+          transition-all duration-300 ease-in-out
+          ${
+            mobileSidebarOpen
+              ? 'translate-x-0'
+              : '-translate-x-full lg:translate-x-0'
+          }
+          w-64
+          bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800
+        `}
+      >
+        {/* Logo Section */}
+        <div className="flex items-center justify-center h-16 border-b border-zinc-200 dark:border-zinc-800">
+          <button
+            onClick={() => {
+              navigate('/');
+              setMobileSidebarOpen(false);
+            }}
+            className="flex items-center gap-3 px-3 py-2 transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          >
+            <Coffee className="w-8 h-8 text-emerald-600" />
+            <span className="font-semibold text-zinc-900 dark:text-white whitespace-nowrap">
+              Shiplap Shop
+            </span>
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-2 py-4 space-y-1">
+          <button
+            onClick={() => {
+              setActiveTab('categories');
+              setMobileSidebarOpen(false);
+            }}
+            className={`
+              flex items-center w-full px-3 py-2 rounded-lg transition-colors
+              ${
+                activeTab === 'categories'
+                  ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-100'
+                  : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+              }
+            `}
+          >
+            <Grid3X3 className="w-5 h-5" />
+            <span className="ml-3 whitespace-nowrap">Categories</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('menu-items');
+              setMobileSidebarOpen(false);
+            }}
+            className={`
+              flex items-center w-full px-3 py-2 rounded-lg transition-colors
+              ${
+                activeTab === 'menu-items'
+                  ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-100'
+                  : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+              }
+            `}
+          >
+            <MenuIcon className="w-5 h-5" />
+            <span className="ml-3 whitespace-nowrap">Menu Items</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('sizes');
+              setMobileSidebarOpen(false);
+            }}
+            className={`
+              flex items-center w-full px-3 py-2 rounded-lg transition-colors
+              ${
+                activeTab === 'sizes'
+                  ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-100'
+                  : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+              }
+            `}
+          >
+            <Ruler className="w-5 h-5" />
+            <span className="ml-3 whitespace-nowrap">Sizes</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('attributes');
+              setMobileSidebarOpen(false);
+            }}
+            className={`
+              flex items-center w-full px-3 py-2 rounded-lg transition-colors
+              ${
+                activeTab === 'attributes'
+                  ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-100'
+                  : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+              }
+            `}
+          >
+            <Tag className="w-5 h-5" />
+            <span className="ml-3 whitespace-nowrap">Attributes</span>
+          </button>
+        </nav>
+
+        {/* Sign Out Button - Desktop Only */}
+        <div className="hidden p-2 border-b border-zinc-200 lg:block dark:border-zinc-800">
+          <Button
+            variant="outline"
+            onClick={handleSignOut}
+            className="w-full text-zinc-700 border-zinc-300 dark:border-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+
+        {/* User Section - Always Present */}
+        <div className="p-2 border-t border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-3 px-3 py-2">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/20">
+              <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                {user.email?.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate text-zinc-900 dark:text-zinc-100">
+                Admin
+              </p>
+              <p className="text-xs truncate text-zinc-500 dark:text-zinc-400">
+                {user.email}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Sign Out Button - Mobile Only (Bottom) */}
+        <div className="p-2 border-t border-zinc-200 lg:hidden dark:border-zinc-800">
+          <Button
+            variant="outline"
+            onClick={handleSignOut}
+            className="w-full text-zinc-700 border-zinc-300 dark:border-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex flex-col flex-1 min-w-0 bg-white dark:bg-zinc-950">
+        {/* Top Header */}
+        <header className="px-4 py-4 bg-white border-b border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setMobileSidebarOpen(true)}
+                className="p-2 rounded-lg lg:hidden hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              >
+                <MenuIcon className="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
+              </button>
+              <div>
+                <h1 className="text-xl font-bold lg:text-2xl text-zinc-900 dark:text-zinc-100">
+                  {activeTab === 'categories'
+                    ? 'Categories Management'
+                    : activeTab === 'menu-items'
+                    ? 'Menu Items Management'
+                    : activeTab === 'sizes'
+                    ? 'Sizes Management'
+                    : 'Attributes Management'}
+                </h1>
+                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  {activeTab === 'categories'
+                    ? 'Organize your menu structure with categories'
+                    : activeTab === 'menu-items'
+                    ? 'Manage individual items and their details'
+                    : activeTab === 'sizes'
+                    ? 'Configure available sizes and pricing adjustments'
+                    : 'Manage item attributes like Hot, Iced, Vegan, etc.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleDarkMode}
+                className="text-zinc-700 border-zinc-200 dark:border-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+              >
+                {isDarkMode ? (
+                  <Sun className="w-4 h-4" />
+                ) : (
+                  <Moon className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <main className="flex-1 p-3 lg:p-6 bg-zinc-50 dark:bg-zinc-950">
+          <div className="mx-auto max-w-7xl">
+            {activeTab === 'categories' && (
+              <div className="space-y-6">
+                {/* Categories Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                      Categories ({categories.length})
+                    </h2>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                      Manage your menu categories
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setEditingItem(null);
+                      categoryForm.reset();
+                      setIsDialogOpen(true);
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Category
+                  </Button>
+                </div>
+
+                {/* Categories Grid */}
+                {dataLoading ? (
+                  <div className="py-12 text-center">
+                    <div className="w-12 h-12 mx-auto border-b-2 rounded-full animate-spin border-emerald-500"></div>
+                    <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+                      Loading categories...
+                    </p>
+                  </div>
+                ) : (
+                  // Paginated categories - show controls only when more than itemsPerPage
+                  (() => {
+                    const total = categories.length;
+                    const totalPages = Math.max(
+                      1,
+                      Math.ceil(total / itemsPerPage)
+                    );
+                    const page = Math.min(Math.max(1, currentPage), totalPages);
+                    const start = (page - 1) * itemsPerPage;
+                    const paginated = categories.slice(
+                      start,
+                      start + itemsPerPage
+                    );
+
+                    return (
+                      <div>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                          {paginated.map((category, idx) => {
+                            const index = start + idx; // global index used for drag/drop
+                            const isUpdating = updatingCategories.has(
+                              category.id
+                            );
+                            return (
+                              <div
+                                key={category.id}
+                                draggable
+                                onDragStart={() =>
+                                  handleCategoryDragStart(category)
+                                }
+                                onDragOver={(e) =>
+                                  handleCategoryDragOver(e, index)
+                                }
+                                onDragLeave={handleCategoryDragLeave}
+                                onDrop={(e) => handleCategoryDrop(e, index)}
+                                className={`relative p-4 bg-white rounded-lg border transition-all duration-200 cursor-move dark:bg-zinc-900 ${
+                                  categoryDragOverIndex === index
+                                    ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/20'
+                                    : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
+                                } ${isUpdating ? 'blur-sm' : ''}`}
+                              >
+                                {isUpdating && (
+                                  <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/80 dark:bg-zinc-900/80">
+                                    <div className="w-6 h-6 border-b-2 rounded-full animate-spin border-emerald-500"></div>
+                                  </div>
+                                )}
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex-1">
+                                    <h3 className="font-medium text-zinc-900 dark:text-zinc-100">
+                                      {category.name}
+                                    </h3>
+                                    {category.description && (
+                                      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                                        {category.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 ml-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setEditingItem(category);
+                                        categoryForm.reset({
+                                          name: category.name,
+                                          description:
+                                            category.description || '',
+                                        });
+                                        setIsDialogOpen(true);
+                                      }}
+                                      disabled={isUpdating}
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+
+                                    {confirmingDeleteCategory ===
+                                    category.id ? (
+                                      <div className="flex items-center gap-1">
+                                        <Button
+                                          size="sm"
+                                          variant="destructive"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteCategory(category.id);
+                                          }}
+                                        >
+                                          Delete
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setConfirmingDeleteCategory(null);
+                                          }}
+                                        >
+                                          Cancel
+                                        </Button>
+                                      </div>
+                                    ) : (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setConfirmingDeleteCategory(
+                                            category.id
+                                          );
+                                        }}
+                                        disabled={isUpdating}
+                                        className="text-white rounded bg-rose-600 hover:bg-rose-700"
+                                      >
+                                        <Trash2 className="w-4 h-4 text-white" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Category Image with overlay controls */}
+                                <div className="mt-3">
+                                  <div className="relative w-full h-40 overflow-hidden border rounded border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900">
+                                    {category.image_url ? (
+                                      <img
+                                        src={category.image_url}
+                                        alt={category.name}
+                                        className="object-cover w-full h-full"
+                                      />
+                                    ) : (
+                                      <div className="flex items-center justify-center w-full h-full text-zinc-400">
+                                        <span className="text-sm">
+                                          No image
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* Overlay icons */}
+                                    <div className="absolute flex gap-2 top-2 right-2">
+                                      <input
+                                        id={`cat-image-input-${category.id}`}
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) =>
+                                          handleCategoryImageChange(e, category)
+                                        }
+                                        onClick={(e) => e.stopPropagation()}
+                                      />
+
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          triggerCategoryImageSelect(
+                                            category.id,
+                                            e
+                                          );
+                                        }}
+                                        title="Update image"
+                                        className="p-2 transition-transform rounded shadow bg-white/90 dark:bg-zinc-800/80 hover:scale-105"
+                                      >
+                                        <Edit className="w-4 h-4 text-zinc-700 dark:text-zinc-100" />
+                                      </button>
+
+                                      {confirmingDeleteImageCategory ===
+                                      category.id ? (
+                                        <div className="flex items-center gap-1">
+                                          <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteCategoryImage(
+                                                category
+                                              );
+                                            }}
+                                          >
+                                            Delete
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setConfirmingDeleteImageCategory(
+                                                null
+                                              );
+                                            }}
+                                          >
+                                            Cancel
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setConfirmingDeleteImageCategory(
+                                              category.id
+                                            );
+                                          }}
+                                          title="Delete image"
+                                          className="p-2 transition-transform rounded shadow bg-white/90 dark:bg-zinc-800/80 hover:scale-105"
+                                        >
+                                          <Trash2 className="w-4 h-4 text-rose-600" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center justify-between mt-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                        Order: {category.display_order}
+                                      </span>
+                                      <div className="flex items-center gap-1">
+                                        <div
+                                          className={`w-2 h-2 rounded-full ${
+                                            category.is_active
+                                              ? 'bg-green-500'
+                                              : 'bg-red-500'
+                                          }`}
+                                        />
+                                        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                                          {category.is_active
+                                            ? 'Active'
+                                            : 'Inactive'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        toggleItemStatus(
+                                          category.id,
+                                          !category.is_active,
+                                          'category'
+                                        )
+                                      }
+                                      disabled={isUpdating}
+                                    >
+                                      {category.is_active ? (
+                                        <EyeOff className="w-4 h-4" />
+                                      ) : (
+                                        <Eye className="w-4 h-4" />
+                                      )}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {total > itemsPerPage && (
+                          <div className="flex items-center justify-center gap-3 py-3">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                setCurrentPage((p) => Math.max(1, p - 1))
+                              }
+                              disabled={page <= 1}
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                            </Button>
+                            <div className="text-sm text-zinc-700 dark:text-zinc-300">
+                              Page {page} of {totalPages}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                setCurrentPage((p) =>
+                                  Math.min(totalPages, p + 1)
+                                )
+                              }
+                              disabled={page >= totalPages}
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()
+                )}
+
+                {!dataLoading && categories.length === 0 && (
+                  <div className="py-12 text-center">
+                    <Coffee className="w-12 h-12 mx-auto mb-4 text-zinc-400 dark:text-zinc-600" />
+                    <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
+                      No categories yet
+                    </h3>
+                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                      Get started by creating your first category.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'menu-items' && (
+              <div className="space-y-6">
+                {/* Menu Items Header */}
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                      Menu Items ({menuItems.length})
+                    </h2>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                      Manage your menu items
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <Button
+                      onClick={() => {
+                        setEditingItem(null);
+                        menuItemForm.reset();
+                        setIsDialogOpen(true);
+                      }}
+                      className="bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Menu Item
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Category Filter Buttons */}
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <button
+                    onClick={() => setSelectedCategory('')}
+                    className={`px-3 py-1.5 text-sm rounded-full font-medium transition-colors ${
+                      selectedCategory === ''
+                        ? 'bg-emerald-600 text-white shadow'
+                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                    }`}
+                  >
+                    All Categories
+                  </button>
+                  {categories.map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`px-3 py-1.5 text-sm rounded-full font-medium transition-colors ${
+                        selectedCategory === category.id
+                          ? 'bg-emerald-600 text-white shadow'
+                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                      }`}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Menu Items List - paginated, 6 per page */}
+                <div className="space-y-3">
+                  {(() => {
+                    const filtered = menuItems.filter(
+                      (item) =>
+                        !selectedCategory ||
+                        item.category_id === selectedCategory
+                    );
+                    const total = filtered.length;
+                    const totalPages = Math.max(
+                      1,
+                      Math.ceil(total / itemsPerPage)
+                    );
+                    const page = Math.min(Math.max(1, currentPage), totalPages);
+                    const start = (page - 1) * itemsPerPage;
+                    const paginated = filtered.slice(
+                      start,
+                      start + itemsPerPage
+                    );
+
+                    return (
+                      <div>
+                        <div className="space-y-2">
+                          {paginated.map((item, idx) => {
+                            const index = start + idx;
+                            const isUpdating = updatingMenuItems.has(item.id);
+                            return (
+                              <div
+                                key={item.id}
+                                onClick={() => {
+                                  setEditingItem(item);
+                                  setPricingType(item.pricing_type || 'fixed');
+
+                                  if (
+                                    item.pricing_type === 'consistent_size' &&
+                                    item.menu_item_sizes
+                                  ) {
+                                    setSelectedSizes(
+                                      item.menu_item_sizes.map((mis) => ({
+                                        size_id: mis.size_id,
+                                        price: mis.price_override || 0,
+                                      }))
+                                    );
+                                  } else {
+                                    setSelectedSizes([]);
+                                  }
+
+                                  if (
+                                    item.pricing_type === 'custom_size' &&
+                                    item.custom_sizes
+                                  ) {
+                                    setCustomSizes(item.custom_sizes);
+                                  } else {
+                                    setCustomSizes([]);
+                                  }
+
+                                  menuItemForm.reset({
+                                    name: item.name,
+                                    description: item.description || '',
+                                    price: item.price,
+                                    category_id: item.category_id,
+                                    tags: item.tags || [],
+                                    pricing_type: item.pricing_type || 'fixed',
+                                  });
+                                  setIsDialogOpen(true);
+                                }}
+                                className={`relative flex items-center gap-2 bg-white rounded-lg border transition-colors duration-150 dark:bg-zinc-900 cursor-pointer ${
+                                  dragOverIndex === index
+                                    ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/20'
+                                    : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
+                                } ${isUpdating ? 'blur-sm' : ''}`}
+                              >
+                                {isUpdating && (
+                                  <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/80 dark:bg-zinc-900/80">
+                                    <div className="w-6 h-6 border-b-2 rounded-full animate-spin border-emerald-500"></div>
+                                  </div>
+                                )}
+                                {selectedCategory && (
+                                  <div
+                                    draggable
+                                    onDragStart={(e) => {
+                                      e.stopPropagation();
+                                      handleDragStart(item);
+                                    }}
+                                    onDragOver={(e) => {
+                                      e.stopPropagation();
+                                      handleDragOver(e, index);
+                                    }}
+                                    onDragLeave={(e) => {
+                                      e.stopPropagation();
+                                      handleDragLeave();
+                                    }}
+                                    onDrop={(e) => {
+                                      e.stopPropagation();
+                                      handleDrop(e, index);
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="p-2 cursor-move text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                                  >
+                                    <GripVertical className="w-4 h-4" />
+                                  </div>
+                                )}
+
+                                <div className="flex-1 px-3 py-2">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <h3 className="font-medium truncate text-zinc-900 dark:text-zinc-100">
+                                          {item.name}
+                                        </h3>
+                                        {/* Price badges: fixed vs multi-size */}
+                                        {item.pricing_type === 'fixed' ||
+                                        !item.pricing_type ? (
+                                          <span className="ml-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                                            {formatCurrency(item.price)}
+                                          </span>
+                                        ) : item.pricing_type ===
+                                            'consistent_size' &&
+                                          item.menu_item_sizes &&
+                                          item.menu_item_sizes.length > 0 ? (
+                                          <div className="flex flex-wrap items-center gap-1 ml-2">
+                                            {item.menu_item_sizes.map(
+                                              (mis, i) => (
+                                                <span
+                                                  key={mis.id || i}
+                                                  className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                                                    i % 3 === 0
+                                                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'
+                                                      : i % 3 === 1
+                                                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300'
+                                                      : 'bg-sky-100 text-sky-700 dark:bg-sky-900/20 dark:text-sky-300'
+                                                  }`}
+                                                >
+                                                  {mis.size?.name}:{' '}
+                                                  {formatCurrency(
+                                                    mis.price_override || 0
+                                                  )}
+                                                </span>
+                                              )
+                                            )}
+                                          </div>
+                                        ) : item.pricing_type ===
+                                            'custom_size' &&
+                                          item.custom_sizes &&
+                                          item.custom_sizes.length > 0 ? (
+                                          <div className="flex flex-wrap items-center gap-1 ml-2">
+                                            {item.custom_sizes.map((cs, i) => (
+                                              <span
+                                                key={cs.name + i}
+                                                className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                                                  i % 2 === 0
+                                                    ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/20 dark:text-pink-300'
+                                                    : 'bg-violet-100 text-violet-700 dark:bg-violet-900/20 dark:text-violet-300'
+                                                }`}
+                                              >
+                                                {cs.name}:{' '}
+                                                {formatCurrency(cs.price)}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <span className="ml-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                                            {formatCurrency(item.price)}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {item.description && (
+                                        <p className="mt-1 text-xs truncate text-zinc-500 dark:text-zinc-400">
+                                          {item.description}
+                                        </p>
+                                      )}
+                                      <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+                                        <span className="px-2 py-0.5 font-medium text-blue-700 bg-blue-100 rounded-full dark:bg-blue-900/20 dark:text-blue-300">
+                                          {categories.find(
+                                            (c) => c.id === item.category_id
+                                          )?.name || 'Unknown'}
+                                        </span>
+                                        <span className="px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                          Order: {item.display_order}
+                                        </span>
+
+                                        {/* Tags — placed in the same row */}
+                                        {item.tags && item.tags.length > 0 && (
+                                          <div className="relative z-0 flex flex-wrap gap-1 mt-0">
+                                            {item.tags.map((tag) => (
+                                              <span
+                                                key={tag}
+                                                className="px-2 py-0.5 text-xs text-purple-700 bg-purple-100 rounded-full dark:bg-purple-900/20 dark:text-purple-300"
+                                              >
+                                                {tag}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        )}
+
+                                        {/* Active indicator - render last */}
+                                        <div className="relative z-10 flex items-center gap-1 ml-2">
+                                          <div
+                                            className={`w-2 h-2 rounded-full ${
+                                              item.is_active
+                                                ? 'bg-green-500'
+                                                : 'bg-red-500'
+                                            }`}
+                                          ></div>
+                                          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                                            {item.is_active
+                                              ? 'Active'
+                                              : 'Inactive'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div
+                                      className="flex items-center gap-2 ml-4"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          toggleItemStatus(
+                                            item.id,
+                                            !item.is_active,
+                                            'menu_item'
+                                          )
+                                        }
+                                        disabled={isUpdating}
+                                      >
+                                        {item.is_active ? (
+                                          <EyeOff className="w-4 h-4" />
+                                        ) : (
+                                          <Eye className="w-4 h-4" />
+                                        )}
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          setEditingItem(item);
+                                          menuItemForm.reset({
+                                            name: item.name,
+                                            description: item.description || '',
+                                            price: item.price,
+                                            category_id: item.category_id,
+                                            tags: item.tags || [],
+                                          });
+                                          setIsDialogOpen(true);
+                                        }}
+                                        disabled={isUpdating}
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => deleteMenuItem(item.id)}
+                                        disabled={isUpdating}
+                                        className="text-white rounded bg-rose-600 hover:bg-rose-700"
+                                      >
+                                        <Trash2 className="w-4 h-4 text-white" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Prev / Next controls */}
+                        <div className="flex items-center justify-center gap-3 py-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              setCurrentPage((p) => Math.max(1, p - 1))
+                            }
+                            disabled={page <= 1}
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </Button>
+                          <div className="text-sm text-zinc-700 dark:text-zinc-300">
+                            Page {page} of {totalPages}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              setCurrentPage((p) => Math.min(totalPages, p + 1))
+                            }
+                            disabled={page >= totalPages}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {menuItems.filter(
+                  (item) =>
+                    !selectedCategory || item.category_id === selectedCategory
+                ).length === 0 && (
+                  <div className="py-12 text-center">
+                    <Coffee className="w-12 h-12 mx-auto mb-4 text-zinc-400 dark:text-zinc-600" />
+                    <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
+                      No menu items found
+                    </h3>
+                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                      {selectedCategory
+                        ? 'No items in this category yet.'
+                        : 'Get started by creating your first menu item.'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'sizes' && (
+              <div className="space-y-6">
+                {/* Sizes Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                      Sizes ({sizes.length})
+                    </h2>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                      Manage available sizes and price adjustments
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setEditingItem(null);
+                      sizeForm.reset();
+                      setIsDialogOpen(true);
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Size
+                  </Button>
+                </div>
+
+                {/* Sizes Grid */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {sizes.map((size) => {
+                    const isUpdating = updatingSizes.has(size.id);
+                    return (
+                      <div
+                        key={size.id}
+                        className={`p-4 bg-white border rounded-lg border-zinc-200 dark:bg-zinc-900 dark:border-zinc-700 ${
+                          isUpdating ? 'blur-sm' : ''
+                        }`}
+                      >
+                        {isUpdating && (
+                          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/80 dark:bg-zinc-900/80">
+                            <div className="w-6 h-6 border-b-2 rounded-full animate-spin border-emerald-500"></div>
+                          </div>
+                        )}
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h3 className="font-medium text-zinc-900 dark:text-zinc-100">
+                              {size.name}
+                            </h3>
+                            {size.description && (
+                              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                                {size.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 ml-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditingItem(size);
+                                sizeForm.reset({
+                                  name: size.name,
+                                  description: size.description || '',
+                                  price_adjustment: size.price_adjustment,
+                                });
+                                setIsDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                requestDelete(size.id, size.name, 'size');
+                              }}
+                              className="text-white rounded bg-rose-600 hover:bg-rose-700"
+                            >
+                              <Trash2 className="w-4 h-4 text-white" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`text-sm font-medium px-2 py-1 rounded-full ${
+                                size.price_adjustment >= 0
+                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300'
+                                  : 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300'
+                              }`}
+                            >
+                              {size.price_adjustment >= 0 ? '+' : ''}$
+                              {size.price_adjustment.toFixed(2)}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <div
+                                className={`w-2 h-2 rounded-full ${
+                                  size.is_active ? 'bg-green-500' : 'bg-red-500'
+                                }`}
+                              />
+                              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                                {size.is_active ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                            Order: {size.display_order}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {sizes.length === 0 && (
+                  <div className="py-12 text-center">
+                    <Sparkles className="w-12 h-12 mx-auto mb-4 text-zinc-400 dark:text-zinc-600" />
+                    <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
+                      No sizes yet
+                    </h3>
+                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                      Create sizes like Small, Medium, Large with price
+                      adjustments.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'attributes' && (
+              <div className="space-y-6">
+                {/* Attributes Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                      Attributes ({attributes.length})
+                    </h2>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                      Manage item attributes like Hot, Iced, Vegan, etc.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setEditingItem(null);
+                      attributeForm.reset();
+                      setIsDialogOpen(true);
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Attribute
+                  </Button>
+                </div>
+
+                {/* Attributes Grid */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {attributes.map((attribute) => {
+                    const isUpdating = updatingAttributes.has(attribute.id);
+                    return (
+                      <div
+                        key={attribute.id}
+                        className={`p-4 bg-white border rounded-lg border-zinc-200 dark:bg-zinc-900 dark:border-zinc-700 ${
+                          isUpdating ? 'blur-sm' : ''
+                        }`}
+                      >
+                        {isUpdating && (
+                          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/80 dark:bg-zinc-900/80">
+                            <div className="w-6 h-6 border-b-2 rounded-full animate-spin border-emerald-500"></div>
+                          </div>
+                        )}
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              {attribute.color && (
+                                <div
+                                  className="w-3 h-3 border rounded-full border-zinc-300 dark:border-zinc-600"
+                                  style={{ backgroundColor: attribute.color }}
+                                />
+                              )}
+                              <h3 className="font-medium text-zinc-900 dark:text-zinc-100">
+                                {attribute.name}
+                              </h3>
+                            </div>
+                            {attribute.description && (
+                              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                {attribute.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 ml-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditingItem(attribute);
+                                attributeForm.reset({
+                                  name: attribute.name,
+                                  description: attribute.description || '',
+                                  color: attribute.color || '',
+                                });
+                                setIsDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                requestDelete(
+                                  attribute.id,
+                                  attribute.name,
+                                  'attribute'
+                                );
+                              }}
+                              className="text-white rounded bg-rose-600 hover:bg-rose-700"
+                            >
+                              <Trash2 className="w-4 h-4 text-white" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                              Order: {attribute.display_order}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <div
+                                className={`w-2 h-2 rounded-full ${
+                                  attribute.is_active
+                                    ? 'bg-green-500'
+                                    : 'bg-red-500'
+                                }`}
+                              />
+                              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                                {attribute.is_active ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {attributes.length === 0 && (
+                  <div className="py-12 text-center">
+                    <Heart className="w-12 h-12 mx-auto mb-4 text-zinc-400 dark:text-zinc-600" />
+                    <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
+                      No attributes yet
+                    </h3>
+                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                      Create attributes to add extra details to your menu items.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingItem
+                ? `Edit ${
+                    activeTab === 'categories'
+                      ? 'Category'
+                      : activeTab === 'menu-items'
+                      ? 'Menu Item'
+                      : activeTab === 'sizes'
+                      ? 'Size'
+                      : 'Attribute'
+                  }`
+                : `Add New ${
+                    activeTab === 'categories'
+                      ? 'Category'
+                      : activeTab === 'menu-items'
+                      ? 'Menu Item'
+                      : activeTab === 'sizes'
+                      ? 'Size'
+                      : 'Attribute'
+                  }`}
+            </DialogTitle>
+          </DialogHeader>
+
+          {activeTab === 'categories' && (
+            <form
+              onSubmit={categoryForm.handleSubmit(onCategorySubmit)}
+              className="space-y-4"
+            >
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  {...categoryForm.register('name')}
+                  placeholder="Category name"
+                />
+                {categoryForm.formState.errors.name && (
+                  <p className="text-sm text-red-500">
+                    {categoryForm.formState.errors.name.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  {...categoryForm.register('description')}
+                  placeholder="Category description (optional)"
+                />
+              </div>
+              {/* Category image upload & preview removed — managed in the category list UI */}
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    setImageFile(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={uploadingImage}>
+                  {uploadingImage
+                    ? 'Saving...'
+                    : editingItem
+                    ? 'Update'
+                    : 'Create'}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {activeTab === 'menu-items' && (
+            <form
+              onSubmit={menuItemForm.handleSubmit(onMenuItemSubmit)}
+              className="space-y-4"
+            >
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  {...menuItemForm.register('name')}
+                  placeholder="Menu item name"
+                />
+                {menuItemForm.formState.errors.name && (
+                  <p className="text-sm text-red-500">
+                    {menuItemForm.formState.errors.name.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  {...menuItemForm.register('description')}
+                  placeholder="Menu item description (optional)"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="category_id">Category</Label>
+                <select
+                  id="category_id"
+                  {...menuItemForm.register('category_id')}
+                  className="w-full px-3 py-2 bg-white border rounded-md border-zinc-200 dark:border-zinc-700 dark:bg-zinc-900"
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                {menuItemForm.formState.errors.category_id && (
+                  <p className="text-sm text-red-500">
+                    {menuItemForm.formState.errors.category_id.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Pricing Type Selector */}
+              <div>
+                <Label>Pricing Type</Label>
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setPricingType('fixed')}
+                    className={`px-3 py-2 text-sm font-medium rounded-full transition-colors border ${
+                      pricingType === 'fixed'
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border-zinc-200 dark:border-zinc-700'
+                    }`}
+                    aria-pressed={pricingType === 'fixed'}
+                  >
+                    Fixed Price
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPricingType('consistent_size')}
+                    className={`px-3 py-2 text-sm font-medium rounded-full transition-colors border ${
+                      pricingType === 'consistent_size'
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border-zinc-200 dark:border-zinc-700'
+                    }`}
+                    aria-pressed={pricingType === 'consistent_size'}
+                  >
+                    Consistent Sizes
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPricingType('custom_size')}
+                    className={`px-3 py-2 text-sm font-medium rounded-full transition-colors border ${
+                      pricingType === 'custom_size'
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border-zinc-200 dark:border-zinc-700'
+                    }`}
+                    aria-pressed={pricingType === 'custom_size'}
+                  >
+                    Custom Sizes
+                  </button>
+                </div>
+              </div>
+
+              {/* Fixed Price */}
+              {pricingType === 'fixed' && (
+                <div>
+                  <Label htmlFor="price">Price</Label>
+                  <Input
+                    id="price"
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*[.,]?[0-9]*"
+                    step="0.01"
+                    {...menuItemForm.register('price')}
+                    placeholder="0.00"
+                  />
+                  {menuItemForm.formState.errors.price && (
+                    <p className="text-sm text-red-500">
+                      {menuItemForm.formState.errors.price.message}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Consistent Size Pricing */}
+              {pricingType === 'consistent_size' && (
+                <div>
+                  <Label>Select Sizes and Prices</Label>
+                  <div className="space-y-2">
+                    {sizes
+                      .filter((s) => s.is_active)
+                      .map((size) => {
+                        const selected = selectedSizes.find(
+                          (s) => s.size_id === size.id
+                        );
+                        return (
+                          <div
+                            key={size.id}
+                            className="flex items-center gap-2"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={!!selected}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedSizes((prev) => [
+                                    ...prev,
+                                    { size_id: size.id, price: 0 },
+                                  ]);
+                                } else {
+                                  setSelectedSizes((prev) =>
+                                    prev.filter((s) => s.size_id !== size.id)
+                                  );
+                                }
+                              }}
+                              className="accent-emerald-600 focus:ring-emerald-500"
+                            />
+
+                            {/* Read-only size name displayed in an Input to match custom-size layout */}
+                            <Input
+                              value={size.name}
+                              readOnly
+                              className="flex-1 hover:cursor-text"
+                              aria-label={`${size.name} size`}
+                            />
+
+                            <Input
+                              type="text"
+                              inputMode="decimal"
+                              pattern="[0-9]*[.,]?[0-9]*"
+                              step="0.01"
+                              placeholder="Price"
+                              className="w-20"
+                              value={selected ? selected.price || '' : ''}
+                              onChange={(e) => {
+                                const raw = e.target.value;
+                                const price = parseFloat(raw) || 0;
+                                setSelectedSizes((prev) =>
+                                  prev.map((s) =>
+                                    s.size_id === size.id ? { ...s, price } : s
+                                  )
+                                );
+                              }}
+                              onBlur={(e) => {
+                                // format the value to two decimals
+                                const price = parseFloat(e.target.value) || 0;
+                                setSelectedSizes((prev) =>
+                                  prev.map((s) =>
+                                    s.size_id === size.id
+                                      ? {
+                                          ...s,
+                                          price: Number(price.toFixed(2)),
+                                        }
+                                      : s
+                                  )
+                                );
+                              }}
+                              disabled={!selected}
+                            />
+
+                            {selected && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedSizes((prev) =>
+                                    prev.filter(
+                                      (item) => item.size_id !== size.id
+                                    )
+                                  );
+                                }}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
+              {/* Custom Size Pricing */}
+              {pricingType === 'custom_size' && (
+                <div>
+                  <Label>Custom Sizes</Label>
+                  <div className="space-y-2">
+                    {customSizes.map((customSize, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input
+                          placeholder="Size name"
+                          value={customSize.name}
+                          onChange={(e) => {
+                            setCustomSizes((prev) =>
+                              prev.map((s, i) =>
+                                i === index ? { ...s, name: e.target.value } : s
+                              )
+                            );
+                          }}
+                          className="flex-1"
+                        />
+                        <Input
+                          type="text"
+                          inputMode="decimal"
+                          pattern="[0-9]*[.,]?[0-9]*"
+                          step="0.01"
+                          placeholder="Price"
+                          value={customSize.price || ''}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            const price = parseFloat(raw) || 0;
+                            setCustomSizes((prev) =>
+                              prev.map((s, i) =>
+                                i === index ? { ...s, price } : s
+                              )
+                            );
+                          }}
+                          onBlur={(e) => {
+                            const price = parseFloat(e.target.value) || 0;
+                            setCustomSizes((prev) =>
+                              prev.map((s, i) =>
+                                i === index
+                                  ? { ...s, price: Number(price.toFixed(2)) }
+                                  : s
+                              )
+                            );
+                          }}
+                          className="w-20"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setCustomSizes((prev) =>
+                              prev.filter((_, i) => i !== index)
+                            );
+                          }}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setCustomSizes((prev) => [
+                          ...prev,
+                          { name: '', price: 0 },
+                        ]);
+                      }}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Custom Size
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <Label>Tags</Label>
+                <Controller
+                  control={menuItemForm.control}
+                  name="tags"
+                  render={({ field }) => (
+                    <div className="flex flex-wrap gap-2 p-2 border rounded-md border-zinc-200 dark:border-zinc-700">
+                      {attributes.map((attr) => (
+                        <button
+                          key={attr.id}
+                          type="button"
+                          onClick={() => {
+                            const currentTags = field.value || [];
+                            const newTags = currentTags.includes(attr.name)
+                              ? currentTags.filter((t) => t !== attr.name)
+                              : [...currentTags, attr.name];
+                            field.onChange(newTags);
+                          }}
+                          className={`
+              px-2 py-1 text-xs rounded-full transition-colors
+              ${
+                (field.value || []).includes(attr.name)
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200'
+              }
+            `}
+                        >
+                          {attr.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    setImageFile(null);
+                    setPricingType('fixed');
+                    setSelectedSizes([]);
+                    setCustomSizes([]);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={menuItemSaving}>
+                  {menuItemSaving ? (
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block w-4 h-4 border-2 border-transparent rounded-full border-t-white animate-spin" />
+                      <span>Saving...</span>
+                    </div>
+                  ) : editingItem ? (
+                    'Update'
+                  ) : (
+                    'Create'
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {activeTab === 'sizes' && (
+            <form
+              onSubmit={sizeForm.handleSubmit(onSizeSubmit)}
+              className="space-y-4"
+            >
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  {...sizeForm.register('name')}
+                  placeholder="Size name (e.g., Small, Medium, Large)"
+                />
+                {sizeForm.formState.errors.name && (
+                  <p className="text-sm text-red-500">
+                    {sizeForm.formState.errors.name.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  {...sizeForm.register('description')}
+                  placeholder="Size description (optional)"
+                />
+              </div>
+              <div>
+                <Label htmlFor="price_adjustment">Price Adjustment</Label>
+                <Input
+                  id="price_adjustment"
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*[.,]?[0-9]*"
+                  step="0.01"
+                  {...sizeForm.register('price_adjustment')}
+                  placeholder="0.00 (positive for upcharge, negative for discount)"
+                />
+                {sizeForm.formState.errors.price_adjustment && (
+                  <p className="text-sm text-red-500">
+                    {sizeForm.formState.errors.price_adjustment.message}
+                  </p>
+                )}
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    setImageFile(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                  disabled={sizeSaving}
+                >
+                  {sizeSaving ? (
+                    <>
+                      <svg
+                        className="w-4 h-4 mr-2 -ml-1 text-white animate-spin"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        ></path>
+                      </svg>
+                      Saving...
+                    </>
+                  ) : editingItem ? (
+                    'Update'
+                  ) : (
+                    'Create'
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {activeTab === 'attributes' && (
+            <form
+              onSubmit={attributeForm.handleSubmit(onAttributeSubmit)}
+              className="space-y-4"
+            >
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  {...attributeForm.register('name')}
+                  placeholder="Attribute name (e.g., Hot, Iced, Vegan)"
+                />
+                {attributeForm.formState.errors.name && (
+                  <p className="text-sm text-red-500">
+                    {attributeForm.formState.errors.name.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  {...attributeForm.register('description')}
+                  placeholder="Attribute description (optional)"
+                />
+              </div>
+              <div>
+                <Label htmlFor="color">Color (optional)</Label>
+                <Input
+                  id="color"
+                  type="color"
+                  {...attributeForm.register('color')}
+                  className="h-10"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    setImageFile(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                  disabled={attributeSaving}
+                >
+                  {attributeSaving ? (
+                    <>
+                      <svg
+                        className="w-4 h-4 mr-2 -ml-1 text-white animate-spin"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        ></path>
+                      </svg>
+                      Saving...
+                    </>
+                  ) : editingItem ? (
+                    'Update'
+                  ) : (
+                    'Create'
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-zinc-700 dark:text-zinc-300">
+              {`Are you sure you want to delete ${
+                deleteTarget?.name || 'this item'
+              }? This action cannot be undone.`}
+            </p>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteDialogOpen(false);
+                  setDeleteTarget(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="text-white bg-rose-600 hover:bg-rose-700"
+                onClick={confirmDelete}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? (
+                  <svg
+                    className="w-4 h-4 mr-2 text-white animate-spin"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    />
+                  </svg>
+                ) : null}
+                {deleteLoading ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mobile Sidebar Close Button */}
+      {mobileSidebarOpen && (
+        <button
+          onClick={() => setMobileSidebarOpen(false)}
+          className="fixed z-50 p-2 bg-white rounded-lg shadow-lg top-4 right-4 lg:hidden dark:bg-zinc-800"
+        >
+          <X className="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
+        </button>
+      )}
+    </div>
+  );
+};
+
+export default AdminPage;
