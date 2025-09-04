@@ -112,7 +112,7 @@ const Header = () => {
                   className={`relative px-4 py-3 text-base font-medium transition-colors duration-200 group ${
                     isScrolled || isMenuOpen
                       ? 'text-white hover:text-[#D8A24A]'
-                      : 'text-[#3B2A20] hover:text-[#3B2A20]/80'
+                      : 'text-black hover:text-black/80'
                   }`}
                   style={{
                     textShadow: isScrolled || isMenuOpen ? 'none' : 'none',
@@ -121,7 +121,7 @@ const Header = () => {
                   {item.name}
                   <span
                     className={`absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300 ${
-                      isScrolled || isMenuOpen ? 'bg-[#D8A24A]' : 'bg-[#3B2A20]'
+                      isScrolled || isMenuOpen ? 'bg-[#D8A24A]' : 'bg-black'
                     }`}
                   ></span>
                 </button>
@@ -138,7 +138,7 @@ const Header = () => {
                   className={`transition-colors duration-200 ${
                     isScrolled || isMenuOpen
                       ? 'text-white hover:text-[#D8A24A]'
-                      : 'text-[#3B2A20] hover:text-[#3B2A20]/80'
+                      : 'text-black hover:text-black/80'
                   }`}
                   style={{
                     filter: 'none',
@@ -169,7 +169,7 @@ const Header = () => {
                 className={`transition-colors duration-200 md:hidden ${
                   isScrolled || isMenuOpen
                     ? 'text-white hover:text-[#D8A24A]'
-                    : 'text-[#3B2A20] hover:text-[#3B2A20]/80'
+                    : 'text-black hover:text-black/80'
                 }`}
                 style={{
                   filter: 'none',
@@ -184,7 +184,7 @@ const Header = () => {
           <div
             className={`md:hidden transition-all duration-300 ${
               isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-            } overflow-hidden bg-[#3B2A20] backdrop-blur-md border-t border-[#D8A24A]/20 rounded-b-3xl`}
+            } overflow-hidden bg-[#121212] backdrop-blur-md border-t border-[#D8A24A]/20 rounded-b-3xl`}
           >
             <div className="flex flex-col items-center px-2 pt-4 pb-6 space-y-2">
               {[
