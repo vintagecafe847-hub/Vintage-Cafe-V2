@@ -5,7 +5,7 @@ const Hero = () => {
   return (
     <section
       id="hero"
-      className="relative flex items-center justify-center h-[calc(96vh-35px)] overflow-hidden"
+      className="relative flex items-center justify-center h-[calc(93vh-35px)] sm:h-[calc(96vh-35px)] overflow-hidden"
     >
       {/* Top curves at very top of page - higher z-index and fixed positioning */}
       <img

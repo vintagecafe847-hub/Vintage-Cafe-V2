@@ -29,12 +29,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../components/ui/dialog';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../components/ui/card';
 import { Button } from '../components/ui/button';
 
 // Hooks
@@ -703,32 +697,97 @@ const AdminPage = () => {
         : '/admin';
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50 to-orange-50 dark:from-zinc-950 dark:via-amber-950 dark:to-orange-950">
-        <div className="container flex items-center justify-center min-h-screen px-4 py-16 mx-auto">
-          <div className="w-full max-w-md mx-auto">
-            <Card className="overflow-hidden shadow-2xl bg-white/90 backdrop-blur-sm border-stone-200 dark:bg-zinc-900/90 dark:border-zinc-800">
-              <CardHeader className="pb-2 text-center bg-gradient-to-r from-amber-500 to-orange-500">
-                <div className="flex flex-col items-center py-6">
-                  <div className="p-4 mb-4 bg-white rounded-full shadow-lg">
-                    <img
-                      src="/white-logo.png"
-                      alt="Vintage Cafe"
-                      className="object-contain w-16 h-16"
-                    />
-                  </div>
-                  <CardTitle className="text-2xl font-bold text-white">
-                    Admin Login
-                  </CardTitle>
-                  <p className="max-w-xs mt-2 text-sm text-amber-100">
-                    Secure access to your restaurant management panel
-                  </p>
+      <div className="relative min-h-screen overflow-hidden bg-[#FEF7F3]">
+        {/* Top decorative curves - matching the main website */}
+        <img
+          src="/vro3.svg"
+          alt="Decorative curves"
+          className="absolute top-0 left-0 z-30 w-full pointer-events-none"
+        />
+
+        {/* Decorative elements scattered around the page */}
+        <div className="absolute top-20 left-10 z-10 opacity-60 rotate-12">
+          <img
+            src="/icons/coffee-beans.svg"
+            alt="Coffee beans decoration"
+            className="w-16 h-16"
+          />
+        </div>
+        <div className="absolute top-40 right-16 z-10 opacity-50 -rotate-45">
+          <img
+            src="/icons/flower.svg"
+            alt="Flower decoration"
+            className="w-20 h-20"
+          />
+        </div>
+        <div className="absolute bottom-32 left-20 z-10 opacity-40 rotate-[25deg]">
+          <img
+            src="/icons/green-leafs.svg"
+            alt="Green leaves decoration"
+            className="w-24 h-24"
+          />
+        </div>
+        <div className="absolute bottom-20 right-12 z-10 opacity-50">
+          <img
+            src="/icons/pink-flower2.svg"
+            alt="Pink flower decoration"
+            className="w-18 h-18"
+          />
+        </div>
+
+        {/* Main content container */}
+        <div className="relative z-20 flex items-center justify-center min-h-screen px-4 py-16">
+          <div className="w-full max-w-lg mx-auto">
+            
+            {/* Main login card */}
+            <div className="relative bg-white rounded-3xl shadow-2xl border border-[#D8A24A]/20 overflow-hidden">
+              
+              {/* Header section with logo and title */}
+              <div className="relative px-8 py-12 text-center bg-white">
+                {/* Logo */}
+                <div className="flex justify-center mb-6">
+                  <img
+                    src="/dark-logo.png"
+                    alt="Vintage Cafe"
+                    className="object-contain w-32 h-32"
+                  />
                 </div>
-              </CardHeader>
-              <CardContent className="p-8">
-                <div className="mb-6 text-center">
-                  <div className="inline-flex items-center px-4 py-2 mb-4 text-sm font-medium bg-blue-100 border border-blue-200 rounded-full text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
+                
+                {/* Title */}
+                <h1 
+                  className="mb-4 text-4xl font-bold"
+                  style={{ 
+                    color: '#3B2A20',
+                    fontFamily: 'Prata, serif'
+                  }}
+                >
+                  Admin Portal
+                </h1>
+                
+                {/* Golden divider line - matching main website */}
+                <div className="w-24 h-1 mx-auto mb-6 bg-[#D8A24A]"></div>
+                
+                {/* Subtitle */}
+                <p className="max-w-md mx-auto text-lg leading-relaxed text-[#3B2A20]/70">
+                  Welcome back! Sign in with your authorized Google account to manage your cafe.
+                </p>
+              </div>
+
+              {/* Authentication section */}
+              <div className="px-8 py-8 bg-[#FAFAFA] border-t border-[#D8A24A]/10">
+                
+                {/* Security badge */}
+                <div className="flex items-center justify-center mb-6">
+                  <div 
+                    className="inline-flex items-center px-6 py-3 text-sm font-medium rounded-full border-2"
+                    style={{
+                      backgroundColor: '#FEF7F3',
+                      borderColor: '#D8A24A',
+                      color: '#3B2A20'
+                    }}
+                  >
                     <svg
-                      className="w-4 h-4 mr-2"
+                      className="w-5 h-5 mr-2"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -738,14 +797,11 @@ const AdminPage = () => {
                         clipRule="evenodd"
                       />
                     </svg>
-                    Google Sign-In Only
+                    Secure Google Authentication
                   </div>
-                  <p className="text-sm text-stone-600 dark:text-stone-400">
-                    Sign in with your authorized Google account to access the
-                    admin panel.
-                  </p>
                 </div>
 
+                {/* Google Auth Component */}
                 <div className="w-full mx-auto">
                   <Auth
                     supabaseClient={supabase}
@@ -753,28 +809,32 @@ const AdminPage = () => {
                       theme: ThemeSupa,
                       style: {
                         button: {
-                          borderRadius: '8px',
-                          fontSize: '14px',
-                          fontWeight: '500',
-                          padding: '12px 16px',
+                          borderRadius: '16px',
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          padding: '16px 24px',
+                          backgroundColor: '#D8A24A',
+                          border: 'none',
+                          color: 'white',
+                          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                          transition: 'all 0.3s ease',
                         },
                         container: {
-                          fontFamily:
-                            'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                         },
                       },
                       variables: {
                         default: {
                           colors: {
-                            brand: '#f59e0b',
-                            brandAccent: '#d97706',
+                            brand: '#D8A24A',
+                            brandAccent: '#B8861D',
                             brandButtonText: 'white',
-                            defaultButtonBackground: '#f8fafc',
-                            defaultButtonBackgroundHover: '#f1f5f9',
+                            defaultButtonBackground: '#D8A24A',
+                            defaultButtonBackgroundHover: '#B8861D',
                             inputBackground: '#ffffff',
-                            inputBorder: '#d1d5db',
-                            inputBorderHover: '#9ca3af',
-                            inputBorderFocus: '#f59e0b',
+                            inputBorder: '#D8A24A',
+                            inputBorderHover: '#B8861D',
+                            inputBorderFocus: '#D8A24A',
                           },
                         },
                       },
@@ -786,22 +846,31 @@ const AdminPage = () => {
                   />
                 </div>
 
-                <div className="mt-6 text-center">
-                  <div className="text-xs text-stone-500 dark:text-stone-400">
-                    <p className="mb-2">🔒 Secure authentication via Google</p>
-                    <p>Only authorized accounts can access this panel</p>
+                {/* Security notice */}
+                <div className="mt-8 text-center">
+                  <div className="text-sm text-[#3B2A20]/60">
+                    <p className="mb-2 flex items-center justify-center">
+                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Protected by enterprise-grade security
+                    </p>
+                    <p>Only authorized Google accounts have access</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* Footer with branding */}
-            <div className="mt-8 text-center">
-              <p className="text-sm text-stone-600 dark:text-stone-400">
-                Powered by{' '}
-                <span className="font-semibold text-amber-600 dark:text-amber-400">
-                  Vintage Cafe Management System
+            {/* Footer branding */}
+            <div className="mt-12 text-center">
+              <p className="text-lg font-medium" style={{ color: '#3B2A20' }}>
+                ☕ Powered by{' '}
+                <span className="font-bold" style={{ color: '#D8A24A' }}>
+                  Vintage Cafe
                 </span>
+              </p>
+              <p className="mt-2 text-sm text-[#3B2A20]/60">
+                Management System
               </p>
             </div>
           </div>
@@ -813,26 +882,94 @@ const AdminPage = () => {
   // Access denied screen (user is logged in but not authorized)
   if (user && !isAuthorized) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-zinc-950">
-        <Card className="max-w-md mx-auto bg-white border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
-          <CardHeader>
-            <CardTitle className="text-red-600 dark:text-red-400">
-              Access Denied
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4 text-zinc-700 dark:text-zinc-300">
-              You don't have permission to access the admin panel.
-            </p>
-            <Button
-              onClick={signOut}
-              variant="outline"
-              className="text-zinc-700 border-zinc-300 dark:border-zinc-600 dark:text-zinc-300"
-            >
-              Sign Out
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="relative min-h-screen overflow-hidden bg-[#FEF7F3]">
+        {/* Top decorative curves */}
+        <img
+          src="/vro3.svg"
+          alt="Decorative curves"
+          className="absolute top-0 left-0 z-30 w-full pointer-events-none"
+        />
+
+        {/* Decorative elements */}
+        <div className="absolute top-32 right-16 z-10 opacity-40 rotate-12">
+          <img
+            src="/icons/coffee-sketch.svg"
+            alt="Coffee cup decoration"
+            className="w-24 h-24"
+          />
+        </div>
+        <div className="absolute bottom-40 left-12 z-10 opacity-50 -rotate-12">
+          <img
+            src="/icons/flower2.svg"
+            alt="Flower decoration"
+            className="w-20 h-20"
+          />
+        </div>
+
+        {/* Main content */}
+        <div className="relative z-20 flex items-center justify-center min-h-screen px-4 py-16">
+          <div className="w-full max-w-lg mx-auto">
+            
+            {/* Access denied card */}
+            <div className="relative bg-white rounded-3xl shadow-2xl border border-red-200 overflow-hidden">
+              
+              {/* Header */}
+              <div className="px-8 py-12 text-center bg-white">
+                {/* Logo */}
+                <div className="flex justify-center mb-6">
+                  <img
+                    src="/dark-logo.png"
+                    alt="Vintage Cafe"
+                    className="object-contain w-24 h-24"
+                  />
+                </div>
+                
+                {/* Title */}
+                <h1 
+                  className="mb-4 text-3xl font-bold text-red-600"
+                  style={{ fontFamily: 'Prata, serif' }}
+                >
+                  Access Denied
+                </h1>
+                
+                {/* Red divider line */}
+                <div className="w-16 h-1 mx-auto mb-6 bg-red-500"></div>
+                
+                {/* Message */}
+                <p className="max-w-md mx-auto text-lg leading-relaxed text-[#3B2A20]/70">
+                  Sorry, you don't have permission to access the admin panel. 
+                  Please contact the cafe owner if you believe this is an error.
+                </p>
+              </div>
+
+              {/* Action section */}
+              <div className="px-8 py-8 bg-red-50 border-t border-red-100">
+                <div className="text-center">
+                  <p className="mb-6 text-sm text-[#3B2A20]/60">
+                    Signed in as: <span className="font-medium">{user.email}</span>
+                  </p>
+                  
+                  <Button
+                    onClick={signOut}
+                    className="px-8 py-3 text-white bg-red-600 rounded-full hover:bg-red-700 transition-colors duration-300 font-medium"
+                  >
+                    Sign Out & Try Different Account
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-12 text-center">
+              <p className="text-lg font-medium" style={{ color: '#3B2A20' }}>
+                ☕ Powered by{' '}
+                <span className="font-bold" style={{ color: '#D8A24A' }}>
+                  Vintage Cafe
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
