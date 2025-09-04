@@ -1,5 +1,5 @@
 import { Button } from '../../ui/button';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2 } from '@/lib/icons';
 import type { Size } from '../../../types/admin';
 
 interface SizeCardProps {

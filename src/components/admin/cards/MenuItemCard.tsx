@@ -1,5 +1,5 @@
 import { Button } from '../../ui/button';
-import { Edit, Eye, EyeOff, Trash2, GripVertical } from 'lucide-react';
+import { Edit, Eye, EyeOff, Trash2, GripVertical } from '@/lib/icons';
 import type { MenuItem, Category } from '../../../types/admin';
 
 interface MenuItemCardProps {

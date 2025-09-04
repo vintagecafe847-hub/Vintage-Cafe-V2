@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
 import { Switch } from '../../ui/switch';
-import { Loader2, Plus, Edit2, Trash2, Mail, User } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, Mail, User } from '@/lib/icons';
 import type { AdminAccount } from '../../../types/admin';
 
 interface AccountsTabProps {

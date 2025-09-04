@@ -1,4 +1,4 @@
-import { Instagram, Facebook, Heart, MapPin, Phone, Mail } from 'lucide-react';
+import { Instagram, Facebook, Heart, MapPin, Phone, Mail } from '@/lib/icons';
 
 const Footer = () => {
   const scrollToSection = (sectionId: string) => {
@@ -172,7 +172,7 @@ const Footer = () => {
                   style={{ color: '#c9a876' }}
                 />
                 <p className="text-sm" style={{ color: '#a8a097' }}>
-                  info@vintagecafeschaumburg.com
+                  vintagecafeschaumburg@gmail.com
                 </p>
               </div>
             </div>

@@ -865,8 +865,13 @@ const Menu = () => {
                                 ? 'cursor-pointer hover:bg-[#D8A24A]/5 rounded-md p-1 -m-1'
                                 : ''
                             }`}
-                            onClick={() => {
-                              if (hasAdditionalDetails(item)) {
+                            onClick={(e) => {
+                              // Only handle clicks if we have additional details and the click isn't on the overlay
+                              if (
+                                hasAdditionalDetails(item) &&
+                                !e.defaultPrevented
+                              ) {
+                                e.stopPropagation();
                                 console.log(
                                   `Toggling expansion for item: ${item.name}, currently expanded: ${isExpanded}`
                                 );
@@ -878,9 +883,7 @@ const Menu = () => {
                             {item.description && (
                               <div
                                 id={`description-${item.id}`}
-                                className={`flex-1 min-w-0 ${
-                                  !isExpanded ? 'line-clamp-1' : ''
-                                }`}
+                                className="flex-1 min-w-0 line-clamp-1"
                               >
                                 <p className="text-sm text-[#3B2A20]/60">
                                   {item.description}
@@ -889,73 +892,106 @@ const Menu = () => {
                             )}
 
                             {/* Tags */}
-                            <div
-                              className={`flex items-center gap-1 flex-shrink-0 ${
-                                !isExpanded ? 'max-w-[40%]' : ''
-                              }`}
-                            >
-                              {/* Attributes from tags array */}
-                              {item.tags &&
-                                Array.isArray(item.tags) &&
-                                item.tags.length > 0 &&
-                                item.tags
-                                  .slice(0, isExpanded ? item.tags.length : 2)
-                                  .map((tag, tagIndex) => (
-                                    <span
-                                      key={`tag-${tagIndex}`}
-                                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap"
-                                      style={{
-                                        backgroundColor: getAttributeColor(
-                                          undefined,
-                                          tagIndex
+                            <div className="flex items-center gap-1 flex-shrink-0 max-w-[40%]">
+                              {(() => {
+                                // Combine both tags and attributes into a single array
+                                const allTags: Array<{
+                                  type: 'tag' | 'attribute';
+                                  key: string;
+                                  name: string;
+                                  color: string;
+                                }> = [];
+
+                                // Add tags from item.tags array
+                                if (
+                                  item.tags &&
+                                  Array.isArray(item.tags) &&
+                                  item.tags.length > 0
+                                ) {
+                                  item.tags.forEach((tag, tagIndex) => {
+                                    allTags.push({
+                                      type: 'tag',
+                                      key: `tag-${tagIndex}`,
+                                      name: tag,
+                                      color: getAttributeColor(
+                                        undefined,
+                                        tagIndex
+                                      ),
+                                    });
+                                  });
+                                }
+
+                                // Add attributes from menu_item_attributes
+                                if (
+                                  item.menu_item_attributes &&
+                                  item.menu_item_attributes.length > 0
+                                ) {
+                                  item.menu_item_attributes.forEach(
+                                    (attr, attrIndex) => {
+                                      allTags.push({
+                                        type: 'attribute',
+                                        key: attr.id,
+                                        name: attr.attribute.name,
+                                        color: getAttributeColor(
+                                          attr.attribute.color,
+                                          attrIndex
                                         ),
-                                        color: 'white',
-                                      }}
-                                    >
-                                      <Tag className="w-3 h-3" />
-                                      {tag}
-                                    </span>
-                                  ))}
+                                      });
+                                    }
+                                  );
+                                }
 
-                              {/* Attributes from menu_item_attributes with colors */}
-                              {item.menu_item_attributes &&
-                                item.menu_item_attributes.length > 0 &&
-                                item.menu_item_attributes
-                                  .slice(
-                                    0,
-                                    isExpanded
-                                      ? item.menu_item_attributes.length
-                                      : 2
-                                  )
-                                  .map((attr, attrIndex) => {
-                                    const backgroundColor = getAttributeColor(
-                                      attr.attribute.color,
-                                      attrIndex
-                                    );
+                                // Always limit to 2 tags in the card (regardless of expansion state)
+                                const displayTags = allTags.slice(0, 2);
+                                const hasMoreTags = allTags.length > 2;
 
-                                    return (
+                                return (
+                                  <>
+                                    {displayTags.map((tag) => (
                                       <span
-                                        key={attr.id}
+                                        key={tag.key}
                                         className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap"
                                         style={{
-                                          backgroundColor,
+                                          backgroundColor: tag.color,
                                           color: 'white',
                                         }}
                                       >
                                         <Tag className="w-3 h-3" />
-                                        {attr.attribute.name}
+                                        {tag.name}
                                       </span>
-                                    );
-                                  })}
+                                    ))}
+                                    {hasMoreTags && (
+                                      <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-[#D8A24A] bg-[#D8A24A]/10 rounded-full">
+                                        +{allTags.length - 2} more
+                                      </span>
+                                    )}
+                                  </>
+                                );
+                              })()}
                             </div>
                           </div>
 
                           {/* Expanded Details Overlay */}
                           {isExpanded && showDetails && (
                             <div
-                              className="absolute top-full left-0 right-0 mt-2 p-4 bg-white border border-[#3B2A20]/20 rounded-lg shadow-lg z-50"
+                              className="absolute top-full left-0 right-0 mt-2 p-4 bg-white border border-[#3B2A20]/20 rounded-lg shadow-lg z-50 cursor-pointer"
                               data-expanded-item
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log(
+                                  `Closing expanded details for item: ${item.name}`
+                                );
+                                toggleItemExpansion(item.id);
+                              }}
                             >
+                              <div className="flex items-center justify-between mb-3">
+                                <h5 className="text-xs font-medium uppercase tracking-wide text-[#3B2A20]/80">
+                                  Details
+                                </h5>
+                                <span className="text-xs text-[#3B2A20]/50 italic">
+                                  Click to close
+                                </span>
+                              </div>
                               <div className="space-y-3">
                                 {/* Full Description */}
                                 {item.description && (

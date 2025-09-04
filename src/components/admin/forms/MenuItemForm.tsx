@@ -6,7 +6,7 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { Textarea } from '../../ui/textarea';
-import { Plus, X } from 'lucide-react';
+import { Plus, X } from '@/lib/icons';
 import type { MenuItem, Category, Size, Attribute } from '../../../types/admin';
 
 const menuItemSchema = z.object({

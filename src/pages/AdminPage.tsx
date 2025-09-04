@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
+// Using direct Supabase OAuth call instead of the Auth UI component
 import { supabase } from '../lib/supabase';
 
 // Layout Components
@@ -697,51 +696,14 @@ const AdminPage = () => {
         : '/admin';
 
     return (
-      <div className="relative min-h-screen overflow-hidden bg-[#FEF7F3]">
-        {/* Top decorative curves - matching the main website */}
-        <img
-          src="/vro3.svg"
-          alt="Decorative curves"
-          className="absolute top-0 left-0 z-30 w-full pointer-events-none"
-        />
-
-        {/* Decorative elements scattered around the page */}
-        <div className="absolute top-20 left-10 z-10 opacity-60 rotate-12">
-          <img
-            src="/icons/coffee-beans.svg"
-            alt="Coffee beans decoration"
-            className="w-16 h-16"
-          />
-        </div>
-        <div className="absolute top-40 right-16 z-10 opacity-50 -rotate-45">
-          <img
-            src="/icons/flower.svg"
-            alt="Flower decoration"
-            className="w-20 h-20"
-          />
-        </div>
-        <div className="absolute bottom-32 left-20 z-10 opacity-40 rotate-[25deg]">
-          <img
-            src="/icons/green-leafs.svg"
-            alt="Green leaves decoration"
-            className="w-24 h-24"
-          />
-        </div>
-        <div className="absolute bottom-20 right-12 z-10 opacity-50">
-          <img
-            src="/icons/pink-flower2.svg"
-            alt="Pink flower decoration"
-            className="w-18 h-18"
-          />
-        </div>
+      <div className="relative h-screen bg-[#FEF7F3]">
+        {/* Top decorative curves removed per request */}
 
         {/* Main content container */}
-        <div className="relative z-20 flex items-center justify-center min-h-screen px-4 py-16">
+        <div className="relative z-20 flex items-center justify-center h-screen px-4">
           <div className="w-full max-w-lg mx-auto">
-            
-            {/* Main login card */}
-            <div className="relative bg-white rounded-3xl shadow-2xl border border-[#D8A24A]/20 overflow-hidden">
-              
+            {/* Main login card - centered */}
+            <div className="relative bg-white rounded-3xl shadow-2xl border border-[#D8A24A]/20 overflow-hidden max-h-[calc(100vh-160px)]">
               {/* Header section with logo and title */}
               <div className="relative px-8 py-12 text-center bg-white">
                 {/* Logo */}
@@ -752,38 +714,38 @@ const AdminPage = () => {
                     className="object-contain w-32 h-32"
                   />
                 </div>
-                
+
                 {/* Title */}
-                <h1 
+                <h1
                   className="mb-4 text-4xl font-bold"
-                  style={{ 
+                  style={{
                     color: '#3B2A20',
-                    fontFamily: 'Prata, serif'
+                    fontFamily: 'Prata, serif',
                   }}
                 >
                   Admin Portal
                 </h1>
-                
+
                 {/* Golden divider line - matching main website */}
                 <div className="w-24 h-1 mx-auto mb-6 bg-[#D8A24A]"></div>
-                
+
                 {/* Subtitle */}
                 <p className="max-w-md mx-auto text-lg leading-relaxed text-[#3B2A20]/70">
-                  Welcome back! Sign in with your authorized Google account to manage your cafe.
+                  Welcome back! Sign in with your authorized Google account to
+                  manage your cafe.
                 </p>
               </div>
 
               {/* Authentication section */}
               <div className="px-8 py-8 bg-[#FAFAFA] border-t border-[#D8A24A]/10">
-                
                 {/* Security badge */}
                 <div className="flex items-center justify-center mb-6">
-                  <div 
-                    className="inline-flex items-center px-6 py-3 text-sm font-medium rounded-full border-2"
+                  <div
+                    className="inline-flex items-center px-6 py-3 text-sm font-medium border-2 rounded-full"
                     style={{
                       backgroundColor: '#FEF7F3',
                       borderColor: '#D8A24A',
-                      color: '#3B2A20'
+                      color: '#3B2A20',
                     }}
                   >
                     <svg
@@ -801,57 +763,47 @@ const AdminPage = () => {
                   </div>
                 </div>
 
-                {/* Google Auth Component */}
-                <div className="w-full mx-auto">
-                  <Auth
-                    supabaseClient={supabase}
-                    appearance={{
-                      theme: ThemeSupa,
-                      style: {
-                        button: {
-                          borderRadius: '16px',
-                          fontSize: '16px',
-                          fontWeight: '600',
-                          padding: '16px 24px',
-                          backgroundColor: '#D8A24A',
-                          border: 'none',
-                          color: 'white',
-                          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                          transition: 'all 0.3s ease',
-                        },
-                        container: {
-                          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                        },
-                      },
-                      variables: {
-                        default: {
-                          colors: {
-                            brand: '#D8A24A',
-                            brandAccent: '#B8861D',
-                            brandButtonText: 'white',
-                            defaultButtonBackground: '#D8A24A',
-                            defaultButtonBackgroundHover: '#B8861D',
-                            inputBackground: '#ffffff',
-                            inputBorder: '#D8A24A',
-                            inputBorderHover: '#B8861D',
-                            inputBorderFocus: '#D8A24A',
-                          },
-                        },
-                      },
+                {/* Custom Google Sign-In Button (white with icon + text) */}
+                <div className="flex justify-center w-full mx-auto">
+                  <button
+                    onClick={async () => {
+                      await supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: { redirectTo: redirectToUrl },
+                      });
                     }}
-                    providers={['google']}
-                    onlyThirdPartyProviders={true}
-                    redirectTo={redirectToUrl}
-                    socialLayout="horizontal"
-                  />
+                    className="inline-flex items-center justify-center w-full max-w-xs px-4 py-3 transition-shadow duration-200 bg-white border rounded-full shadow-sm border-neutral-200 hover:shadow-md"
+                    aria-label="Sign in with Google"
+                  >
+                    <img
+                      src="/icons/google-icon.svg"
+                      alt="Google"
+                      className="w-5 h-5 mr-3"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display =
+                          'none';
+                      }}
+                    />
+                    <span className="text-sm font-medium text-neutral-800">
+                      Sign in with Google
+                    </span>
+                  </button>
                 </div>
 
                 {/* Security notice */}
                 <div className="mt-8 text-center">
                   <div className="text-sm text-[#3B2A20]/60">
-                    <p className="mb-2 flex items-center justify-center">
-                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    <p className="flex items-center justify-center mb-2">
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                       Protected by enterprise-grade security
                     </p>
@@ -861,17 +813,19 @@ const AdminPage = () => {
               </div>
             </div>
 
-            {/* Footer branding */}
-            <div className="mt-12 text-center">
-              <p className="text-lg font-medium" style={{ color: '#3B2A20' }}>
-                ☕ Powered by{' '}
-                <span className="font-bold" style={{ color: '#D8A24A' }}>
-                  Vintage Cafe
-                </span>
-              </p>
-              <p className="mt-2 text-sm text-[#3B2A20]/60">
-                Management System
-              </p>
+            {/* Footer branding (smaller and pinned to bottom) */}
+            <div className="absolute bottom-6 left-0 right-0 flex justify-center">
+              <div className="text-center">
+                <p className="text-sm font-medium" style={{ color: '#3B2A20' }}>
+                  ☕ Powered by{' '}
+                  <span className="font-semibold" style={{ color: '#D8A24A' }}>
+                    Vintage Cafe
+                  </span>
+                </p>
+                <p className="mt-1 text-xs text-[#3B2A20]/60">
+                  Management System
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -882,37 +836,14 @@ const AdminPage = () => {
   // Access denied screen (user is logged in but not authorized)
   if (user && !isAuthorized) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-[#FEF7F3]">
-        {/* Top decorative curves */}
-        <img
-          src="/vro3.svg"
-          alt="Decorative curves"
-          className="absolute top-0 left-0 z-30 w-full pointer-events-none"
-        />
-
-        {/* Decorative elements */}
-        <div className="absolute top-32 right-16 z-10 opacity-40 rotate-12">
-          <img
-            src="/icons/coffee-sketch.svg"
-            alt="Coffee cup decoration"
-            className="w-24 h-24"
-          />
-        </div>
-        <div className="absolute bottom-40 left-12 z-10 opacity-50 -rotate-12">
-          <img
-            src="/icons/flower2.svg"
-            alt="Flower decoration"
-            className="w-20 h-20"
-          />
-        </div>
+      <div className="relative h-screen bg-[#FEF7F3]">
+        {/* Top decorative curves removed per request */}
 
         {/* Main content */}
-        <div className="relative z-20 flex items-center justify-center min-h-screen px-4 py-16">
+        <div className="relative z-20 flex items-center justify-center h-screen px-4">
           <div className="w-full max-w-lg mx-auto">
-            
             {/* Access denied card */}
-            <div className="relative bg-white rounded-3xl shadow-2xl border border-red-200 overflow-hidden">
-              
+            <div className="relative overflow-hidden bg-white border border-red-200 shadow-2xl rounded-3xl max-h-[calc(100vh-160px)]">
               {/* Header */}
               <div className="px-8 py-12 text-center bg-white">
                 {/* Logo */}
@@ -923,35 +854,36 @@ const AdminPage = () => {
                     className="object-contain w-24 h-24"
                   />
                 </div>
-                
+
                 {/* Title */}
-                <h1 
+                <h1
                   className="mb-4 text-3xl font-bold text-red-600"
                   style={{ fontFamily: 'Prata, serif' }}
                 >
                   Access Denied
                 </h1>
-                
+
                 {/* Red divider line */}
                 <div className="w-16 h-1 mx-auto mb-6 bg-red-500"></div>
-                
+
                 {/* Message */}
                 <p className="max-w-md mx-auto text-lg leading-relaxed text-[#3B2A20]/70">
-                  Sorry, you don't have permission to access the admin panel. 
+                  Sorry, you don't have permission to access the admin panel.
                   Please contact the cafe owner if you believe this is an error.
                 </p>
               </div>
 
               {/* Action section */}
-              <div className="px-8 py-8 bg-red-50 border-t border-red-100">
+              <div className="px-8 py-8 border-t border-red-100 bg-red-50">
                 <div className="text-center">
                   <p className="mb-6 text-sm text-[#3B2A20]/60">
-                    Signed in as: <span className="font-medium">{user.email}</span>
+                    Signed in as:{' '}
+                    <span className="font-medium">{user.email}</span>
                   </p>
-                  
+
                   <Button
                     onClick={signOut}
-                    className="px-8 py-3 text-white bg-red-600 rounded-full hover:bg-red-700 transition-colors duration-300 font-medium"
+                    className="px-8 py-3 font-medium text-white transition-colors duration-300 bg-red-600 rounded-full hover:bg-red-700"
                   >
                     Sign Out & Try Different Account
                   </Button>
@@ -959,11 +891,11 @@ const AdminPage = () => {
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="mt-12 text-center">
-              <p className="text-lg font-medium" style={{ color: '#3B2A20' }}>
+            {/* Footer (pinned to bottom) */}
+            <div className="absolute bottom-6 left-0 right-0 flex justify-center">
+              <p className="text-sm font-medium" style={{ color: '#3B2A20' }}>
                 ☕ Powered by{' '}
-                <span className="font-bold" style={{ color: '#D8A24A' }}>
+                <span className="font-semibold" style={{ color: '#D8A24A' }}>
                   Vintage Cafe
                 </span>
               </p>
@@ -1187,7 +1119,7 @@ const AdminPage = () => {
           <DialogHeader>
             <DialogTitle>Publish Changes</DialogTitle>
           </DialogHeader>
-          <div className="text-center py-4">
+          <div className="py-4 text-center">
             <p className="text-gray-600 dark:text-gray-400">
               Changes will be live in 2-3 minutes
             </p>

@@ -9,7 +9,7 @@ import {
   Trash2,
   Eye,
   EyeOff,
-} from 'lucide-react';
+} from '@/lib/icons';
 import type { Category } from '../../../types/admin';
 
 interface CategoriesTabProps {

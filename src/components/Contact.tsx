@@ -229,7 +229,7 @@ const Contact = () => {
                     <div>
                       <h4 className="font-semibold text-[#3B2A20]">Email</h4>
                       <p className="text-gray-800">
-                        info@vintagecafeschaumburg.com
+                        vintagecafeschaumburg@gmail.com
                       </p>
                     </div>
                   </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../../ui/button';
-import { Plus, Coffee, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Coffee, ChevronLeft, ChevronRight } from '@/lib/icons';
 import { MenuItemCard } from '../cards/MenuItemCard';
 import type { MenuItem, Category } from '../../../types/admin';
 

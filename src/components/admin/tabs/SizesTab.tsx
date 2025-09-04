@@ -1,5 +1,6 @@
 import { Button } from '../../ui/button';
-import { Plus, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Sparkles } from '@/lib/icons';
 import { SizeCard } from '../cards/SizeCard';
 import type { Size } from '../../../types/admin';
 

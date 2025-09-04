@@ -1,5 +1,5 @@
 import React from 'react';
-import { Coffee, Heart, Star, Leaf, Users, Sparkles } from 'lucide-react';
+import { Coffee, Heart, Star, Leaf, Users, Sparkles } from '@/lib/icons';
 
 const SloganSlider = () => {
   const slogans = [

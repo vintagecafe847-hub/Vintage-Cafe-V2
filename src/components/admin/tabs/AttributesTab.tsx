@@ -1,5 +1,6 @@
 import { Button } from '../../ui/button';
-import { Plus, Heart } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Heart } from '@/lib/icons';
 import { AttributeCard } from '../cards/AttributeCard';
 import type { Attribute } from '../../../types/admin';
 

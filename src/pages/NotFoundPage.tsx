@@ -1,6 +1,6 @@
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { Home, Phone } from 'lucide-react';
+import { Home, Phone } from '@/lib/icons';
 import { useNavigate } from 'react-router-dom';
 
 const NotFoundPage = () => {

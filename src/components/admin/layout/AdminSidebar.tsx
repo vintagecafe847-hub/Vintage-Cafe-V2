@@ -9,7 +9,7 @@ import {
   Tag,
   Users, // Add this import
   X,
-} from 'lucide-react';
+} from '@/lib/icons';
 import type { User } from '@supabase/supabase-js';
 
 interface AdminSidebarProps {

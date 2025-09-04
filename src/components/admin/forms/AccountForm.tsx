@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '@/lib/icons';
 import type { AdminAccount, AccountFormData } from '../../../types/admin';
 
 interface AccountFormProps {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Instagram, Facebook } from 'lucide-react';
+import { Menu, X, Instagram, Facebook } from '@/lib/icons';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

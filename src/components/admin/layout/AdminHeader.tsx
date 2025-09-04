@@ -1,5 +1,5 @@
 import { Button } from '../../ui/button';
-import { Menu as MenuIcon, Sun, Moon, Globe } from 'lucide-react';
+import { Menu as MenuIcon, Sun, Moon, Globe } from '@/lib/icons';
 
 interface AdminHeaderProps {
   activeTab: string;

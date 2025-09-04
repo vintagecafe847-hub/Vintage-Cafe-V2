@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Heart, Music, Users, Wifi, Star, Award, Coffee } from 'lucide-react';
+import { Heart, Music, Users, Wifi, Star, Award, Coffee } from '@/lib/icons';
 
 const About = () => {
   const features = [
