@@ -246,7 +246,7 @@ const Footer = () => {
           style={{ borderTop: '1px solid rgba(201, 168, 118, 0.2)' }}
         >
           <p className="text-sm" style={{ color: '#a8a097' }}>
-            © 2025 The Shiplap Shop & Coffee House. All rights reserved.
+            © 2025 Vintage Cafe. All rights reserved.
           </p>
           <p
             className="flex items-center gap-1 text-sm font-medium"

@@ -1,0 +1,102 @@
+[
+  {
+    "id": "4d25fb6d-d716-4071-90d2-8be4d1901534",
+    "name": "Hot",
+    "description": "Hot beverage",
+    "color": "#ff4444",
+    "is_active": true,
+    "display_order": 1,
+    "created_at": "2025-08-29 00:57:48.00711+00",
+    "updated_at": "2025-08-29 00:57:48.00711+00"
+  },
+  {
+    "id": "4acac7f6-a5a0-4917-ac7f-e3a8da2a8955",
+    "name": "Iced",
+    "description": "Iced beverage",
+    "color": "#4444ff",
+    "is_active": true,
+    "display_order": 2,
+    "created_at": "2025-08-29 00:57:48.00711+00",
+    "updated_at": "2025-08-29 00:57:48.00711+00"
+  },
+  {
+    "id": "33de8b0a-fa1a-4f0d-99ec-e71f8c88eaba",
+    "name": "Decaf",
+    "description": "Decaffeinated",
+    "color": "#888888",
+    "is_active": true,
+    "display_order": 3,
+    "created_at": "2025-08-29 00:57:48.00711+00",
+    "updated_at": "2025-08-29 00:57:48.00711+00"
+  },
+  {
+    "id": "efdb208b-1a98-4e80-bcd3-7ea46a97c79b",
+    "name": "Sugar-Free",
+    "description": "No added sugar",
+    "color": "#ffaa44",
+    "is_active": true,
+    "display_order": 5,
+    "created_at": "2025-08-29 00:57:48.00711+00",
+    "updated_at": "2025-08-29 00:57:48.00711+00"
+  },
+  {
+    "id": "228cb519-85cc-4ff1-b351-f88493035ff0",
+    "name": "Vegan",
+    "description": "Vegan friendly",
+    "color": "#22aa22",
+    "is_active": true,
+    "display_order": 6,
+    "created_at": "2025-08-29 00:57:48.00711+00",
+    "updated_at": "2025-08-29 00:57:48.00711+00"
+  },
+  {
+    "id": "b264004d-1eb6-4ecf-8528-33e14e1d1385",
+    "name": "Gluten-Free",
+    "description": "No gluten",
+    "color": "#aa22aa",
+    "is_active": true,
+    "display_order": 7,
+    "created_at": "2025-08-29 00:57:48.00711+00",
+    "updated_at": "2025-08-29 00:57:48.00711+00"
+  },
+  {
+    "id": "dc11e649-20f8-43b4-9435-4e114165d688",
+    "name": "Seasonal",
+    "description": "Seasonal Products",
+    "color": "#8030ab",
+    "is_active": true,
+    "display_order": 9,
+    "created_at": "2025-09-03 15:23:09.83438+00",
+    "updated_at": "2025-09-03 15:23:09.83438+00"
+  },
+  {
+    "id": "537fea84-1f13-4fbf-9b40-aa05aa509e9b",
+    "name": "Spicy",
+    "description": "Spicy Product",
+    "color": "#ff424c",
+    "is_active": true,
+    "display_order": 8,
+    "created_at": "2025-08-31 02:20:51.067513+00",
+    "updated_at": "2025-09-03 15:23:29.92268+00"
+  },
+  {
+    "id": "fdc2c340-0430-4df0-8e9d-e26b2a3236f0",
+    "name": "Nut-Free",
+    "description": "Nut-Free Prodcuts",
+    "color": "#68df6a",
+    "is_active": true,
+    "display_order": 10,
+    "created_at": "2025-09-03 15:23:57.663688+00",
+    "updated_at": "2025-09-03 15:23:57.663688+00"
+  },
+  {
+    "id": "e205df45-632f-4b2e-9ab9-49789cf722d5",
+    "name": "Dairy-Free",
+    "description": "No dairy products",
+    "color": "#bbdefb",
+    "is_active": true,
+    "display_order": 4,
+    "created_at": "2025-08-29 00:57:48.00711+00",
+    "updated_at": "2025-09-04 16:33:31.263963+00"
+  }
+]

@@ -20,6 +20,8 @@ export const useAdminAuth = (): AdminAuthState & {
     }
 
     try {
+      console.log('🔍 Checking authorization for email:', userEmail);
+
       // SECURITY: Enhanced authorization check with multiple validation layers
       const { data, error } = await supabase
         .from('admin_accounts')
@@ -28,8 +30,13 @@ export const useAdminAuth = (): AdminAuthState & {
         .eq('is_active', true)
         .single();
 
-      if (error || !data) {
-        console.log('User not found in admin_accounts or inactive:', userEmail);
+      console.log('📊 Admin check result:', { data, error, userEmail });
+
+      if (error) {
+        console.error('❌ Database error during admin check:', error);
+        setIsAuthorized(false);
+      } else if (!data) {
+        console.log('❌ User not found in admin_accounts:', userEmail);
         setIsAuthorized(false);
       } else {
         // SECURITY: Additional verification that the email matches exactly
@@ -37,9 +44,14 @@ export const useAdminAuth = (): AdminAuthState & {
           data.email.toLowerCase() === userEmail.toLowerCase() &&
           data.is_active === true
         ) {
+          console.log('✅ User authorized as admin:', userEmail);
           setIsAuthorized(true);
         } else {
-          console.log('Email mismatch or inactive account:', userEmail);
+          console.log('❌ Email mismatch or inactive account:', {
+            expected: userEmail.toLowerCase(),
+            found: data.email.toLowerCase(),
+            isActive: data.is_active,
+          });
           setIsAuthorized(false);
         }
       }

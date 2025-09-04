@@ -537,23 +537,59 @@ const AdminPage = () => {
     const { id, type } = deleteDialog.target;
     try {
       setDeleteDialog((prev) => ({ ...prev, loading: true }));
-      const table =
-        type === 'size'
-          ? 'sizes'
-          : type === 'attribute'
-          ? 'attributes'
-          : type === 'menu_item'
-          ? 'menu_items'
-          : type === 'category'
-          ? 'categories'
-          : type === 'account'
-          ? 'admin_accounts'
-          : null;
 
-      if (!table) throw new Error('Unsupported delete type: ' + type);
+      // For menu_items, we need to handle cascading deletes
+      if (type === 'menu_item') {
+        // Step 1: Delete related menu_item_attributes
+        const { error: attributesDeleteError } = await supabase
+          .from('menu_item_attributes')
+          .delete()
+          .eq('menu_item_id', id);
 
-      const { error } = await supabase.from(table).delete().eq('id', id);
-      if (error) throw error;
+        if (attributesDeleteError) {
+          throw new Error(
+            `Failed to delete related attributes: ${attributesDeleteError.message}`
+          );
+        }
+
+        // Step 2: Delete related menu_item_sizes
+        const { error: sizesDeleteError } = await supabase
+          .from('menu_item_sizes')
+          .delete()
+          .eq('menu_item_id', id);
+
+        if (sizesDeleteError) {
+          throw new Error(
+            `Failed to delete related sizes: ${sizesDeleteError.message}`
+          );
+        }
+
+        // Step 3: Delete the menu item itself
+        const { error } = await supabase
+          .from('menu_items')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+      } else {
+        // For other types, use the simple delete
+        const table =
+          type === 'size'
+            ? 'sizes'
+            : type === 'attribute'
+            ? 'attributes'
+            : type === 'category'
+            ? 'categories'
+            : type === 'account'
+            ? 'admin_accounts'
+            : null;
+
+        if (!table) throw new Error('Unsupported delete type: ' + type);
+
+        const { error } = await supabase.from(table).delete().eq('id', id);
+        if (error) throw error;
+      }
+
       await refetchData();
     } catch (error) {
       console.error('Error deleting item:', error);
@@ -1001,6 +1037,7 @@ const AdminPage = () => {
             onCreateNew={handleCreateNewAttribute}
           />
         )}
+
         {activeTab === 'accounts' && (
           <AccountsTab
             accounts={accounts}

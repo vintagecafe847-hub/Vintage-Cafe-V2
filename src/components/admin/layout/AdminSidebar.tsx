@@ -94,7 +94,7 @@ export const AdminSidebar = ({
           >
             <Coffee className="w-8 h-8 text-emerald-600" />
             <span className="font-semibold text-zinc-900 dark:text-white whitespace-nowrap">
-              Shiplap Shop
+              Vintage Cafe
             </span>
           </button>
         </div>

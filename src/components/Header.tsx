@@ -86,7 +86,7 @@ const Header = () => {
                     ? '/white-logo.png'
                     : '/dark-logo.png'
                 }
-                alt="The Shiplap Shop & Coffee House"
+                alt="Vintage Cafe Logo"
                 width={120}
                 height={40}
                 style={{ display: 'block' }}
