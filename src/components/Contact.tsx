@@ -327,7 +327,8 @@ const Contact = () => {
                           this feature is under construction
                         </div>
                         <div className="text-sm text-yellow-700">
-                          this feature is under construction, pls try again later or contact the developer
+                          this feature is under construction, pls try again
+                          later or contact the developer
                         </div>
                       </div>
                     </div>
