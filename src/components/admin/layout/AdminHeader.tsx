@@ -69,16 +69,16 @@ export const AdminHeader = ({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden md:block">
+          {/*<div className="hidden">
             <Button
               onClick={onPublishChanges}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="text-white bg-green-600 hover:bg-green-700"
               size="sm"
             >
               <Globe className="w-4 h-4 mr-2" />
               Publish Changes to Website
             </Button>
-          </div>
+          </div>*/}
           <Button
             variant="outline"
             size="sm"

@@ -307,10 +307,10 @@ const Contact = () => {
                 )}
 
                 {submitStatus === 'error' && (
-                  <div className="p-4 mb-6 border border-red-200 rounded-lg bg-red-50">
+                  <div className="p-4 mb-6 border border-yellow-300 rounded-lg bg-yellow-50">
                     <div className="flex items-center gap-3">
                       <svg
-                        className="w-5 h-5 text-red-600"
+                        className="w-5 h-5 text-yellow-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -319,16 +319,15 @@ const Contact = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
+                          d="M12 9v2m0 4h.01M12 5a7 7 0 110 14 7 7 0 010-14z"
                         />
                       </svg>
                       <div>
-                        <div className="text-base font-semibold text-red-800">
-                          Error sending message
+                        <div className="text-base font-semibold text-yellow-800">
+                          this feature is under construction
                         </div>
-                        <div className="text-sm text-red-700">
-                          {submitMessage ||
-                            'Please try again later or contact us directly.'}
+                        <div className="text-sm text-yellow-700">
+                          this feature is under construction, pls try again later or contact the developer
                         </div>
                       </div>
                     </div>
