@@ -13,6 +13,7 @@ interface AdminLayoutProps {
   mobileSidebarOpen: boolean;
   setMobileSidebarOpen: (open: boolean) => void;
   onSignOut: () => void;
+  onPublishChanges: () => void;
 }
 
 export const AdminLayout = ({
@@ -25,6 +26,7 @@ export const AdminLayout = ({
   mobileSidebarOpen,
   setMobileSidebarOpen,
   onSignOut,
+  onPublishChanges,
 }: AdminLayoutProps) => {
   return (
     <div className="flex min-h-screen">
@@ -44,6 +46,7 @@ export const AdminLayout = ({
           isDarkMode={isDarkMode}
           toggleDarkMode={toggleDarkMode}
           setMobileSidebarOpen={setMobileSidebarOpen}
+          onPublishChanges={onPublishChanges}
         />
 
         {/* Content Area */}

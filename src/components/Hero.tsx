@@ -25,14 +25,14 @@ const Hero = () => {
       <div className="absolute inset-0 z-0 bg-[#FEF7F3]"></div>
 
       {/* Content Container */}
-      <div className="relative z-10 px-6 pt-20 mx-auto max-w-8xl sm:px-8 lg:px-12 sm:pt-24 lg:pt-8">
+      <div className="relative z-10 px-6 pt-12 mx-auto max-w-8xl sm:px-8 lg:px-12 sm:pt-24 lg:pt-8">
         <div className="flex flex-col items-center gap-8 lg:grid lg:grid-cols-2 lg:gap-8">
           {/* Hero Coffee Blob - First on mobile */}
-          <div className="relative flex items-center justify-center mt-4 sm:mt-6 lg:justify-end lg:order-2 lg:mt-0 lg:pl-8">
+          <div className="relative flex items-center justify-center mt-2 sm:mt-6 lg:justify-end lg:order-2 lg:mt-0 lg:pl-8">
             <img
               src="/icons/hero-coffee-blob.svg"
               alt="Decorative coffee blob"
-              className="w-full max-w-[600px] lg:max-w-[700px]"
+              className="w-full max-w-[420px] sm:max-w-[600px] lg:max-w-[700px]"
             />
           </div>
           {/* Decorative minimal lines in the bottom-right of the hero */}
@@ -56,7 +56,7 @@ const Hero = () => {
                   color: '#3B2A20',
                 }}
               >
-                Handcrafted Coffee
+                Vintage Cafe
               </span>
               <span
                 className="block mt-2"
@@ -67,16 +67,16 @@ const Hero = () => {
                   color: '#D8A24A',
                 }}
               >
-                Small-Town Heart
+                Schaumburg
               </span>
             </h1>
             <p
               className="max-w-2xl mb-8 text-lg leading-relaxed md:text-xl"
               style={{ color: '#3B2A20' }}
             >
-              Small-town, farmhouse-style coffeehouse + retail boutique
-              featuring espresso drinks, donuts/pastries, and gifts from 100+
-              local artisans.
+              A cozy community space where coffee, pastries, and creativity come
+              together. Vintage Cafe is a welcoming shop known for its warm
+              atmosphere, freshly baked pastries, and unique drinks.
             </p>
             <div className="flex items-center space-x-4">
               <a
@@ -84,10 +84,12 @@ const Hero = () => {
                 className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white transition-all duration-300 transform rounded-full shadow-lg hover:scale-105 hover:shadow-xl group"
                 style={{ backgroundColor: '#D8A24A' }}
                 onMouseEnter={(e) =>
-                  (e.target.style.backgroundColor = '#C8922A')
+                  ((e.currentTarget as HTMLElement).style.backgroundColor =
+                    '#C8922A')
                 }
                 onMouseLeave={(e) =>
-                  (e.target.style.backgroundColor = '#D8A24A')
+                  ((e.currentTarget as HTMLElement).style.backgroundColor =
+                    '#D8A24A')
                 }
               >
                 Our Menu
@@ -95,21 +97,23 @@ const Hero = () => {
               </a>
 
               <a
-                href="tel:+13602000262"
-                className="items-center inline-flex px-8 py-4 text-lg font-semibold transition-all duration-300 transform border-2 rounded-full bg-white hover:bg-[#FEF7F3]"
+                href="tel:+16304005155"
+                className="items-center hidden sm:inline-flex px-8 py-4 text-lg font-semibold transition-all duration-300 transform border rounded-full bg-[#FEF7F3] hover:bg-white"
                 style={{
                   color: '#3B2A20',
                   borderColor: '#D8A24A',
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.borderColor = '#C8922A';
-                  e.target.style.color = '#3B2A20';
+                  (e.currentTarget as HTMLElement).style.borderColor =
+                    '#C8922A';
+                  (e.currentTarget as HTMLElement).style.color = '#3B2A20';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.borderColor = '#D8A24A';
-                  e.target.style.color = '#3B2A20';
+                  (e.currentTarget as HTMLElement).style.borderColor =
+                    '#D8A24A';
+                  (e.currentTarget as HTMLElement).style.color = '#3B2A20';
                 }}
-                aria-label="Call The Shiplap Shop & Coffee House at +1 (360) 200-0262"
+                aria-label="Call Vintage Cafe Schaumburg at +1 (630) 400-5155"
               >
                 <Phone className="w-5 h-5 mr-2 opacity-90" />
                 Call Us

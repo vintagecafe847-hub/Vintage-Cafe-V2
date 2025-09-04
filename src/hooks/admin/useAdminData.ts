@@ -37,6 +37,7 @@ export const useAdminData = (
   }, []);
 
   const fetchData = useCallback(async () => {
+    // SECURITY: Clear data immediately if not authorized
     if (!isAuthorized) {
       setCategories([]);
       setMenuItems([]);
@@ -49,49 +50,77 @@ export const useAdminData = (
 
     setDataLoading(true);
     try {
-      // Fetch categories
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .order('display_order', { ascending: true });
-      if (categoriesError) throw categoriesError;
+      // SECURITY: Double-check authorization before any database calls
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user?.email) {
+        throw new Error('No authenticated user');
+      }
 
-      // Fetch menu items with categories
-      const { data: menuItemsData, error: menuItemsError } = await supabase
-        .from('menu_items')
-        .select(
+      // Verify user is still in admin_accounts table
+      const { data: adminCheck, error: adminError } = await supabase
+        .from('admin_accounts')
+        .select('is_active')
+        .eq('email', user.email.toLowerCase())
+        .eq('is_active', true)
+        .single();
+
+      if (adminError || !adminCheck) {
+        throw new Error('User not authorized for admin access');
+      }
+
+      // Now safely fetch admin data
+      const [
+        { data: categoriesData, error: categoriesError },
+        { data: menuItemsData, error: menuItemsError },
+        { data: sizesData, error: sizesError },
+        { data: attributesData, error: attributesError },
+        accountsData,
+      ] = await Promise.all([
+        supabase
+          .from('categories')
+          .select('*')
+          .order('display_order', { ascending: true }),
+        supabase
+          .from('menu_items')
+          .select(
+            `
+            *,
+            category:categories(*),
+            menu_item_sizes(*, size:sizes(*))
           `
-          *,
-          category:categories(*),
-          menu_item_sizes(*, size:sizes(*))
-        `
-        )
-        .order('display_order', { ascending: true });
+          )
+          .order('display_order', { ascending: true }),
+        supabase
+          .from('sizes')
+          .select('*')
+          .order('display_order', { ascending: true }),
+        supabase
+          .from('attributes')
+          .select('*')
+          .order('display_order', { ascending: true }),
+        fetchAccounts(),
+      ]);
+
+      if (categoriesError) throw categoriesError;
       if (menuItemsError) throw menuItemsError;
-
-      // Fetch sizes
-      const { data: sizesData, error: sizesError } = await supabase
-        .from('sizes')
-        .select('*')
-        .order('display_order', { ascending: true });
       if (sizesError) throw sizesError;
-
-      // Fetch attributes
-      const { data: attributesData, error: attributesError } = await supabase
-        .from('attributes')
-        .select('*')
-        .order('display_order', { ascending: true });
       if (attributesError) throw attributesError;
 
       setCategories(categoriesData || []);
       setMenuItems(menuItemsData || []);
       setSizes(sizesData || []);
       setAttributes(attributesData || []);
-      // fetch accounts and set
-      const accountsData = await fetchAccounts();
       setAccounts(accountsData || []);
     } catch (error) {
       console.error('Error fetching admin data:', error);
+      // SECURITY: Clear all data on any error
+      setCategories([]);
+      setMenuItems([]);
+      setSizes([]);
+      setAttributes([]);
+      setAccounts([]);
     } finally {
       setDataLoading(false);
     }

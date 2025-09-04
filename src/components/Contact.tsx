@@ -179,18 +179,18 @@ const Contact = () => {
           {/* Header */}
           <div className="mb-16 text-center">
             <h2
-              className="mb-6 text-4xl font-bold md:text-5xl text-amber-800"
+              className="mb-6 text-4xl font-bold md:text-5xl text-[#3B2A20]"
               style={{
                 fontFamily: 'Prata, serif',
               }}
             >
-              Visit Us
+              Vintage Cafe Schaumburg
             </h2>
-            <div className="w-24 h-1 mx-auto mb-6 bg-amber-600"></div>
-            <p className="max-w-3xl mx-auto text-xl leading-relaxed text-gray-600">
-              Come experience the warmth and community that makes The Shiplap
-              Shop & Coffee House special. We're located in the heart of Yelm
-              and can't wait to welcome you.
+            <div className="w-24 h-1 mx-auto mb-6 bg-[#D8A24A]"></div>
+            <p className="max-w-3xl mx-auto text-xl leading-relaxed text-gray-800">
+              Come experience the warmth and community at Vintage Cafe in
+              Schaumburg. We're woman-owned and proud to be a neighborhood spot
+              for coffee, pastries, music, and creative events.
             </p>
           </div>
 
@@ -198,49 +198,50 @@ const Contact = () => {
           <div className="grid items-start gap-16 lg:grid-cols-2">
             {/* Contact Information - Left Side */}
             <div className="space-y-8 lg:order-1">
-              <div className="p-8 border shadow-xl bg-white/90 backdrop-blur-sm rounded-2xl border-amber-200/50">
-                <h3 className="mb-6 text-2xl font-bold text-amber-800">
+              <div className="p-8 border border-gray-200 shadow-xl bg-white/90 backdrop-blur-sm rounded-2xl">
+                <h3 className="mb-6 text-2xl font-bold text-[#3B2A20]">
                   Contact Information
                 </h3>
 
                 <div className="space-y-6">
                   <div className="flex items-start space-x-4">
-                    <MapPin className="flex-shrink-0 w-6 h-6 mt-1 text-amber-600" />
+                    <MapPin className="flex-shrink-0 w-6 h-6 mt-1 text-[#D8A24A]" />
                     <div>
-                      <h4 className="font-semibold text-gray-900">Address</h4>
-                      <p className="text-gray-600">
-                        112 Yelm Ave E
+                      <h4 className="font-semibold text-[#3B2A20]">Address</h4>
+                      <p className="text-gray-800">
+                        105 E Schaumburg Rd
                         <br />
-                        Yelm, WA 98597, USA
+                        Schaumburg, IL 60194, USA
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start space-x-4">
-                    <Phone className="flex-shrink-0 w-6 h-6 mt-1 text-amber-600" />
+                    <Phone className="flex-shrink-0 w-6 h-6 mt-1 text-[#D8A24A]" />
                     <div>
-                      <h4 className="font-semibold text-gray-900">Phone</h4>
-                      <p className="text-gray-600">+1 (360) 200-0262</p>
+                      <h4 className="font-semibold text-[#3B2A20]">Phone</h4>
+                      <p className="text-gray-800">+1 (630) 400-5155</p>
                     </div>
                   </div>
 
                   <div className="flex items-start space-x-4">
-                    <Mail className="flex-shrink-0 w-6 h-6 mt-1 text-amber-600" />
+                    <Mail className="flex-shrink-0 w-6 h-6 mt-1 text-[#D8A24A]" />
                     <div>
-                      <h4 className="font-semibold text-gray-900">Email</h4>
-                      <p className="text-gray-600">cyndie@theshiplapshop.com</p>
+                      <h4 className="font-semibold text-[#3B2A20]">Email</h4>
+                      <p className="text-gray-800">
+                        info@vintagecafeschaumburg.com
+                      </p>
                     </div>
                   </div>
 
                   <div className="flex items-start space-x-4">
-                    <Clock className="flex-shrink-0 w-6 h-6 mt-1 text-amber-600" />
+                    <Clock className="flex-shrink-0 w-6 h-6 mt-1 text-[#D8A24A]" />
                     <div>
-                      <h4 className="font-semibold text-gray-900">Hours</h4>
-                      <div className="space-y-1 text-gray-600">
-                        <p>Monday - Thursday: 6:00 AM - 5:00 PM</p>
-                        <p>Friday: 6:00 AM - 5:30 PM</p>
-                        <p>Saturday: 7:00 AM - 5:30 PM</p>
-                        <p>Sunday: 7:00 AM - 3:00 PM</p>
+                      <h4 className="font-semibold text-[#3B2A20]">Hours</h4>
+                      <div className="space-y-1 text-gray-800">
+                        <p>Monday–Friday: 8:00 AM – 3:00 PM</p>
+                        <p>Saturday: 8:00 AM – 4:00 PM</p>
+                        <p>Sunday: 9:00 AM – 5:00 PM</p>
                       </div>
                     </div>
                   </div>
@@ -248,11 +249,11 @@ const Contact = () => {
 
                 {/* CTA Section - Call, Directions & Social */}
                 <div className="mt-8">
-                  <div className="p-6 text-white shadow-lg bg-gradient-to-r from-amber-800 to-orange-800 rounded-xl">
+                  <div className="p-6 text-white shadow-lg bg-gradient-to-r from-[#131313] to-[#1A1A1A] rounded-xl">
                     <h4 className="mb-3 text-xl font-bold text-center">
                       Connect With Us
                     </h4>
-                    <p className="mb-6 text-sm text-center text-amber-100">
+                    <p className="mb-6 text-sm text-center text-[#c9a876]">
                       Call us, visit our location, or follow us on social media
                       for latest updates
                     </p>
@@ -260,18 +261,18 @@ const Contact = () => {
                     {/* Action Buttons */}
                     <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2">
                       <a
-                        href="tel:+13602000262"
-                        className="flex items-center justify-center px-4 py-2.5 bg-white text-amber-800 font-semibold rounded-lg hover:bg-amber-50 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                        href="tel:+16304005155"
+                        className="flex items-center justify-center px-4 py-2.5 bg-white text-[#3B2A20] font-semibold rounded-lg hover:bg-[#FEF7F3] shadow-lg"
                       >
                         <Phone className="w-4 h-4 mr-2" />
                         Call Us Today
                       </a>
 
                       <a
-                        href="https://maps.google.com/?q=112+Yelm+Ave+E,+Yelm,+WA+98597"
+                        href="https://maps.google.com/?q=105+E+Schaumburg+Rd,+Schaumburg,+IL+60194"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center px-4 py-2.5 bg-white text-amber-800 font-semibold rounded-lg hover:bg-amber-50 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                        className="flex items-center justify-center px-4 py-2.5 bg-white text-[#3B2A20] font-semibold rounded-lg hover:bg-[#FEF7F3] shadow-lg"
                       >
                         <ArrowRight className="w-4 h-4 mr-2" />
                         Get Directions
@@ -284,8 +285,8 @@ const Contact = () => {
 
             {/* Contact Form - Right Side */}
             <div className="lg:order-2">
-              <div className="p-8 border shadow-xl bg-white/90 backdrop-blur-sm rounded-2xl border-amber-200/50">
-                <h3 className="mb-6 text-2xl font-bold text-amber-800">
+              <div className="p-8 border border-gray-200 shadow-xl bg-white/90 backdrop-blur-sm rounded-2xl">
+                <h3 className="mb-6 text-2xl font-bold text-[#3B2A20]">
                   Send us a Message
                 </h3>
 
@@ -338,7 +339,7 @@ const Contact = () => {
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {/* Name */}
                     <div>
-                      <label className="block mb-2 text-sm font-medium text-gray-700">
+                      <label className="block mb-2 text-sm font-medium text-gray-900">
                         Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -348,7 +349,7 @@ const Contact = () => {
                         onChange={handleInputChange}
                         placeholder="Your name"
                         required
-                        className={`w-full px-4 py-3 text-gray-900 transition-all duration-200 border rounded-lg bg-white border-gray-300 placeholder-gray-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 ${
+                        className={`w-full px-4 py-3 text-gray-900 transition-all duration-200 border rounded-lg bg-white border-gray-300 placeholder-gray-500 focus:border-[#D8A24A] focus:outline-none focus:ring-2 focus:ring-[#D8A24A]/20 ${
                           formErrors.name
                             ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
                             : ''
@@ -363,7 +364,7 @@ const Contact = () => {
 
                     {/* Email */}
                     <div>
-                      <label className="block mb-2 text-sm font-medium text-gray-700">
+                      <label className="block mb-2 text-sm font-medium text-gray-900">
                         Email <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -373,7 +374,7 @@ const Contact = () => {
                         onChange={handleInputChange}
                         placeholder="your.email@example.com"
                         required
-                        className={`w-full px-4 py-3 text-gray-900 transition-all duration-200 border rounded-lg bg-white border-gray-300 placeholder-gray-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 ${
+                        className={`w-full px-4 py-3 text-gray-900 transition-all duration-200 border rounded-lg bg-white border-gray-300 placeholder-gray-500 focus:border-[#D8A24A] focus:outline-none focus:ring-2 focus:ring-[#D8A24A]/20 ${
                           formErrors.email
                             ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
                             : ''
@@ -389,7 +390,7 @@ const Contact = () => {
 
                   {/* Phone - Full Width */}
                   <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
+                    <label className="block mb-2 text-sm font-medium text-gray-900">
                       Phone{' '}
                       <span className="text-sm text-gray-500">(optional)</span>
                     </label>
@@ -399,13 +400,13 @@ const Contact = () => {
                       value={formState.phone}
                       onChange={handleInputChange}
                       placeholder="Your phone number"
-                      className="w-full px-4 py-3 text-gray-900 placeholder-gray-500 transition-all duration-200 bg-white border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                      className="w-full px-4 py-3 text-gray-900 placeholder-gray-500 transition-all duration-200 bg-white border border-gray-300 rounded-lg focus:border-[#D8A24A] focus:outline-none focus:ring-2 focus:ring-[#D8A24A]/20"
                     />
                   </div>
 
                   {/* Subject */}
                   <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
+                    <label className="block mb-2 text-sm font-medium text-gray-900">
                       Subject <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -415,7 +416,7 @@ const Contact = () => {
                       onChange={handleInputChange}
                       placeholder="What's this about?"
                       required
-                      className={`w-full px-4 py-3 text-gray-900 transition-all duration-200 border rounded-lg bg-white border-gray-300 placeholder-gray-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 ${
+                      className={`w-full px-4 py-3 text-gray-900 transition-all duration-200 border rounded-lg bg-white border-gray-300 placeholder-gray-500 focus:border-[#D8A24A] focus:outline-none focus:ring-2 focus:ring-[#D8A24A]/20 ${
                         formErrors.subject
                           ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
                           : ''
@@ -430,7 +431,7 @@ const Contact = () => {
 
                   {/* Message */}
                   <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
+                    <label className="block mb-2 text-sm font-medium text-gray-900">
                       Message <span className="text-red-500">*</span>
                     </label>
                     <textarea
@@ -440,7 +441,7 @@ const Contact = () => {
                       placeholder="Tell us what's on your mind..."
                       rows={6}
                       required
-                      className={`w-full px-4 py-3 text-gray-900 transition-all duration-200 border rounded-lg bg-white border-gray-300 placeholder-gray-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 resize-vertical ${
+                      className={`w-full px-4 py-3 text-gray-900 transition-all duration-200 border rounded-lg bg-white border-gray-300 placeholder-gray-500 focus:border-[#D8A24A] focus:outline-none focus:ring-2 focus:ring-[#D8A24A]/20 resize-vertical ${
                         formErrors.message
                           ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
                           : ''
@@ -457,7 +458,7 @@ const Contact = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex items-center justify-center w-full gap-2 px-6 py-4 text-base font-semibold text-white transition-all duration-300 rounded-lg bg-gradient-to-r from-amber-800 to-orange-800 hover:from-amber-700 hover:to-orange-700 hover:-translate-y-1 hover:shadow-lg hover:shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    className="flex items-center justify-center w-full gap-2 px-6 py-4 text-base font-semibold text-white rounded-lg bg-[#121212] hover:text-[#c9a876] hover:shadow-lg hover:shadow-[#D8A24A]/25 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send className="w-5 h-5" />
                     {isSubmitting ? 'Sending...' : 'Send Message'}

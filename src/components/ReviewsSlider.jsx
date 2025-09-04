@@ -307,7 +307,43 @@ const ReviewsSlider = () => {
           </div>
         ))}
       </div>
+
       <div className="relative max-w-6xl px-4 mx-auto sm:px-6 lg:px-8 z-10">
+        {/* Header Section */}
+        <div className="mb-12 text-center lg:mb-16">
+          <h2
+            className="mb-6 text-3xl font-bold lg:text-4xl xl:text-5xl text-[#3B2A20]"
+            style={{ fontFamily: 'Prata, serif' }}
+          >
+            What Our Customers Say
+          </h2>
+          <div className="w-24 h-1 mx-auto mb-6 bg-[#D8A24A]"></div>
+
+          {/* Rating Display */}
+          <div className="inline-flex items-center justify-center px-4 py-3 mx-auto bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-[#3B2A20]/10 sm:px-6">
+            <div className="flex items-center gap-1 sm:gap-2">
+              {/* Stars */}
+              <div className="flex items-center gap-0.5 sm:gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-[#D8A24A] fill-current"
+                  />
+                ))}
+              </div>
+
+              {/* Rating Number */}
+              <span className="text-xl sm:text-2xl font-bold text-[#3B2A20] ml-1 sm:ml-2">
+                4.8
+              </span>
+
+              {/* Review Count */}
+              <span className="text-[#3B2A20]/60 ml-1 sm:ml-2 font-medium text-sm sm:text-base">
+                (500+ reviews)
+              </span>
+            </div>
+          </div>
+        </div>
         {/* Decorative flowers & blobs (desktop only) - now positioned relative to the centered container */}
         <div
           className="absolute z-0 hidden lg:block"

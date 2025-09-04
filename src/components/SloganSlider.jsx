@@ -26,7 +26,7 @@ const SloganSlider = () => {
   ];
 
   return (
-    <section className="relative z-0 overflow-hidden py-5 border-b border-amber-200/25 bg-gradient-to-r from-amber-100 to-orange-100">
+    <section className="relative z-0 overflow-hidden py-5 border-b border-[#D8A24A]/25 bg-[#121212]">
       <div className="w-full overflow-hidden">
         <div
           className="flex gap-8"
@@ -42,13 +42,13 @@ const SloganSlider = () => {
                   key={`first-${index}`}
                   className="flex items-center flex-shrink-0 gap-6 px-4 whitespace-nowrap"
                 >
-                  <IconComponent className="w-4 h-4 text-amber-600 shrink-0" />
+                  <IconComponent className="w-4 h-4 text-[#D8A24A] shrink-0" />
                   <div className="flex items-center gap-3">
-                    <p className="text-sm font-semibold text-amber-800/90">
+                    <p className="text-sm font-semibold text-white/90">
                       {slogan.text}
                     </p>
                     {slogan.pill && (
-                      <span className="px-3 py-1 text-xs font-bold rounded-full text-amber-800 bg-amber-200/80">
+                      <span className="px-3 py-1 text-xs font-bold rounded-full text-[#121212] bg-[#D8A24A]">
                         {slogan.pill}
                       </span>
                     )}
@@ -65,13 +65,13 @@ const SloganSlider = () => {
                   key={`second-${index}`}
                   className="flex items-center flex-shrink-0 gap-6 px-4 whitespace-nowrap"
                 >
-                  <IconComponent className="w-4 h-4 text-amber-600 shrink-0" />
+                  <IconComponent className="w-4 h-4 text-[#D8A24A] shrink-0" />
                   <div className="flex items-center gap-3">
-                    <p className="text-sm font-semibold text-amber-800/90">
+                    <p className="text-sm font-semibold text-white/90">
                       {slogan.text}
                     </p>
                     {slogan.pill && (
-                      <span className="px-3 py-1 text-xs font-bold rounded-full text-amber-800 bg-amber-200/80">
+                      <span className="px-3 py-1 text-xs font-bold rounded-full text-white bg-[#D8A24A]/20">
                         {slogan.pill}
                       </span>
                     )}

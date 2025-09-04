@@ -232,7 +232,7 @@ const AboutStory = () => {
   );
 
   return (
-    <section className="relative py-12 overflow-hidden md:py-20 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
+    <section className="relative py-12 overflow-hidden md:py-20 bg-gradient-to-br from-[#F4F0EA] via-orange-50 to-red-50">
       {/* Random background elements */}
       <div className="absolute inset-0 pointer-events-none">
         {randomElements.map((element) => (

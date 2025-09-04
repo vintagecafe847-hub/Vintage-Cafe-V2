@@ -137,6 +137,9 @@ const AdminPage = () => {
     string | null
   >(null);
 
+  // Publish dialog state
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+
   // Dark mode effect
   useEffect(() => {
     setDarkMode(isDarkMode);
@@ -146,6 +149,10 @@ const AdminPage = () => {
     const newMode = !isDarkMode;
     setIsDarkModeState(newMode);
     setDarkMode(newMode);
+  };
+
+  const handlePublishChanges = () => {
+    setShowPublishDialog(true);
   };
 
   // CRUD Operations
@@ -696,40 +703,107 @@ const AdminPage = () => {
         : '/admin';
 
     return (
-      <div className="min-h-screen bg-white dark:bg-zinc-950">
-        <div className="container px-4 py-16 mx-auto">
-          <div className="max-w-md mx-auto">
-            <Card className="p-6 bg-white border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
-              <CardHeader className="pb-2">
-                <div className="flex flex-col items-center">
-                  <img
-                    src="/white-logo.png"
-                    alt="Shiplap Shop"
-                    className="object-contain w-20 h-20 mb-3"
-                  />
-                  <CardTitle className="text-center text-zinc-900 dark:text-zinc-100">
+      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50 to-orange-50 dark:from-zinc-950 dark:via-amber-950 dark:to-orange-950">
+        <div className="container flex items-center justify-center min-h-screen px-4 py-16 mx-auto">
+          <div className="w-full max-w-md mx-auto">
+            <Card className="overflow-hidden shadow-2xl bg-white/90 backdrop-blur-sm border-stone-200 dark:bg-zinc-900/90 dark:border-zinc-800">
+              <CardHeader className="pb-2 text-center bg-gradient-to-r from-amber-500 to-orange-500">
+                <div className="flex flex-col items-center py-6">
+                  <div className="p-4 mb-4 bg-white rounded-full shadow-lg">
+                    <img
+                      src="/white-logo.png"
+                      alt="Vintage Cafe"
+                      className="object-contain w-16 h-16"
+                    />
+                  </div>
+                  <CardTitle className="text-2xl font-bold text-white">
                     Admin Login
                   </CardTitle>
-                  <p className="max-w-xs mt-2 text-sm text-center text-zinc-600 dark:text-zinc-400">
-                    Sign in with the Google account authorized for the admin
-                    panel.
+                  <p className="max-w-xs mt-2 text-sm text-amber-100">
+                    Secure access to your restaurant management panel
                   </p>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-8">
+                <div className="mb-6 text-center">
+                  <div className="inline-flex items-center px-4 py-2 mb-4 text-sm font-medium bg-blue-100 border border-blue-200 rounded-full text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Google Sign-In Only
+                  </div>
+                  <p className="text-sm text-stone-600 dark:text-stone-400">
+                    Sign in with your authorized Google account to access the
+                    admin panel.
+                  </p>
+                </div>
+
                 <div className="w-full mx-auto">
                   <Auth
                     supabaseClient={supabase}
-                    appearance={{ theme: ThemeSupa }}
+                    appearance={{
+                      theme: ThemeSupa,
+                      style: {
+                        button: {
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          padding: '12px 16px',
+                        },
+                        container: {
+                          fontFamily:
+                            'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                        },
+                      },
+                      variables: {
+                        default: {
+                          colors: {
+                            brand: '#f59e0b',
+                            brandAccent: '#d97706',
+                            brandButtonText: 'white',
+                            defaultButtonBackground: '#f8fafc',
+                            defaultButtonBackgroundHover: '#f1f5f9',
+                            inputBackground: '#ffffff',
+                            inputBorder: '#d1d5db',
+                            inputBorderHover: '#9ca3af',
+                            inputBorderFocus: '#f59e0b',
+                          },
+                        },
+                      },
+                    }}
                     providers={['google']}
+                    onlyThirdPartyProviders={true}
                     redirectTo={redirectToUrl}
+                    socialLayout="horizontal"
                   />
-                  <p className="mt-4 text-xs text-center text-zinc-500 dark:text-zinc-400">
-                    Only Google sign-in is allowed here.
-                  </p>
+                </div>
+
+                <div className="mt-6 text-center">
+                  <div className="text-xs text-stone-500 dark:text-stone-400">
+                    <p className="mb-2">🔒 Secure authentication via Google</p>
+                    <p>Only authorized accounts can access this panel</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
+
+            {/* Footer with branding */}
+            <div className="mt-8 text-center">
+              <p className="text-sm text-stone-600 dark:text-stone-400">
+                Powered by{' '}
+                <span className="font-semibold text-amber-600 dark:text-amber-400">
+                  Vintage Cafe Management System
+                </span>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -742,7 +816,9 @@ const AdminPage = () => {
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-zinc-950">
         <Card className="max-w-md mx-auto bg-white border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
           <CardHeader>
-            <CardTitle className="text-red-600 dark:text-red-400">Access Denied</CardTitle>
+            <CardTitle className="text-red-600 dark:text-red-400">
+              Access Denied
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="mb-4 text-zinc-700 dark:text-zinc-300">
@@ -772,6 +848,7 @@ const AdminPage = () => {
         mobileSidebarOpen={mobileSidebarOpen}
         setMobileSidebarOpen={setMobileSidebarOpen}
         onSignOut={signOut}
+        onPublishChanges={handlePublishChanges}
       >
         {activeTab === 'categories' && (
           <CategoriesTab
@@ -966,6 +1043,20 @@ const AdminPage = () => {
         isLoading={deleteDialog.loading}
         onConfirm={handleDeleteConfirm}
       />
+
+      {/* Publish Changes Dialog */}
+      <Dialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Publish Changes</DialogTitle>
+          </DialogHeader>
+          <div className="text-center py-4">
+            <p className="text-gray-600 dark:text-gray-400">
+              Changes will be live in 2-3 minutes
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

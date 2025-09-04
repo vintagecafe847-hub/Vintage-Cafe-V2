@@ -1,0 +1,100 @@
+{
+  "categories": [
+    {
+      "id": "sample-coffee",
+      "name": "Coffee",
+      "description": "Our specialty coffee selection",
+      "display_order": 1,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sample-pastries",
+      "name": "Pastries",
+      "description": "Fresh baked goods",
+      "display_order": 2,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "menuItems": [
+    {
+      "id": "sample-item-1",
+      "name": "Classic Espresso",
+      "description": "Rich and bold espresso shot made from our premium blend",
+      "price": 3.5,
+      "category_id": "sample-coffee",
+      "display_order": 1,
+      "is_active": true,
+      "tags": ["strong", "classic"],
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z",
+      "category": {
+        "id": "sample-coffee",
+        "name": "Coffee"
+      },
+      "menu_item_sizes": [],
+      "menu_item_attributes": []
+    },
+    {
+      "id": "sample-item-2",
+      "name": "Buttery Croissant",
+      "description": "Flaky, buttery croissant baked fresh daily",
+      "price": 4.25,
+      "category_id": "sample-pastries",
+      "display_order": 1,
+      "is_active": true,
+      "tags": ["fresh", "buttery"],
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z",
+      "category": {
+        "id": "sample-pastries",
+        "name": "Pastries"
+      },
+      "menu_item_sizes": [],
+      "menu_item_attributes": []
+    }
+  ],
+  "sizes": [
+    {
+      "id": "small",
+      "name": "Small",
+      "description": "8oz",
+      "display_order": 1,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "medium",
+      "name": "Medium",
+      "description": "12oz",
+      "display_order": 2,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "attributes": [
+    {
+      "id": "decaf",
+      "name": "Decaf",
+      "description": "Decaffeinated option",
+      "color": "#8B5CF6",
+      "display_order": 1,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "lastUpdated": "2024-09-04T12:00:00.000Z",
+  "version": "sample-dev-1725451200000",
+  "buildInfo": {
+    "timestamp": "2024-09-04T12:00:00.000Z",
+    "environment": "development",
+    "commit": "sample",
+    "branch": "main"
+  }
+}

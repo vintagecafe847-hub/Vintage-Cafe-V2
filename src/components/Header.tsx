@@ -73,7 +73,7 @@ const Header = () => {
         <div
           className={`transition-all duration-500 rounded-3xl ${
             isScrolled || isMenuOpen
-              ? 'bg-[#1A0F0B] backdrop-blur-lg shadow-lg border border-[#D8A24A]/20'
+              ? 'bg-[#121212] backdrop-blur-lg shadow-lg border border-[#D8A24A]/20'
               : 'bg-transparent'
           }`}
         >

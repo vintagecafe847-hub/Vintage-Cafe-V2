@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Coffee,
   Leaf,
@@ -7,6 +7,9 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Tag,
 } from 'lucide-react';
 import {
   supabase,
@@ -19,6 +22,28 @@ type MenuItem = DBMenuItem & {
   categoryName?: string;
   categoryIndex?: number;
   tags?: string[] | string | null;
+  menu_item_attributes?: Array<{
+    id: string;
+    attribute: {
+      id: string;
+      name: string;
+      description?: string;
+      color?: string;
+    };
+  }>;
+  menu_item_sizes?: Array<{
+    id: string;
+    size: {
+      id: string;
+      name: string;
+    };
+    price_override?: number;
+  }>;
+  custom_sizes?: Array<{
+    name: string;
+    price: number;
+  }>;
+  pricing_type?: 'fixed' | 'consistent_size' | 'custom_size';
 };
 
 type Category = DBCategory & {
@@ -40,11 +65,17 @@ const Menu = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [attributeColors, setAttributeColors] = useState<
-    Record<string, string>
-  >({});
   const [loading, setLoading] = useState(true);
-  const itemsPerPage = 6;
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [expandedSizes, setExpandedSizes] = useState<Set<string>>(new Set());
+  const [isMobile, setIsMobile] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+
+  // Dynamic items per page based on screen size
+  const getItemsPerPage = () => (isMobile ? 4 : 10);
 
   // Helper function to map icon names to icon components
   const getIconComponent = (iconName?: string) => {
@@ -64,6 +95,27 @@ const Menu = () => {
     return DEFAULT_IMAGES[categoryIndex % DEFAULT_IMAGES.length];
   }, []);
 
+  // Helper function to get attribute color
+  const getAttributeColor = (color?: string, index?: number) => {
+    if (color) return color;
+
+    // Predefined colors for attributes
+    const attributeColors = [
+      '#D8A24A', // Golden
+      '#8B4513', // Brown
+      '#228B22', // Forest Green
+      '#FF6347', // Tomato
+      '#4682B4', // Steel Blue
+      '#9370DB', // Medium Purple
+      '#DC143C', // Crimson
+      '#FF8C00', // Dark Orange
+      '#32CD32', // Lime Green
+      '#FF1493', // Deep Pink
+    ];
+
+    return attributeColors[(index || 0) % attributeColors.length];
+  };
+
   // Fetch categories and menu items from Supabase
   useEffect(() => {
     const fetchData = async () => {
@@ -79,37 +131,36 @@ const Menu = () => {
 
         if (categoriesError) throw categoriesError;
 
-        // Fetch menu items with their categories
+        // Fetch menu items with their categories, sizes, and attributes
         const { data: menuItemsData, error: menuItemsError } = await supabase
           .from('menu_items')
           .select(
             `
             *,
-            category:categories(*)
+            category:categories(*),
+            menu_item_sizes(
+              id,
+              price_override,
+              size:sizes(
+                id,
+                name
+              )
+            ),
+            menu_item_attributes(
+              id,
+              attribute:attributes(
+                id,
+                name,
+                description,
+                color
+              )
+            )
           `
           )
           .eq('is_active', true)
           .order('created_at', { ascending: true });
 
         if (menuItemsError) throw menuItemsError;
-
-        // Fetch attributes (for tag colors)
-        const { data: attributesData, error: attributesError } = await supabase
-          .from('attributes')
-          .select('*')
-          .eq('is_active', true)
-          .order('display_order', { ascending: true });
-
-        if (attributesError) throw attributesError;
-
-        // Build a name -> color map for quick lookup (case-insensitive)
-        const attrColorMap: Record<string, string> = {};
-        (attributesData || []).forEach((a: any) => {
-          if (a.name)
-            attrColorMap[(a.name as string).toLowerCase()] =
-              a.color || '#E5E7EB';
-        });
-        setAttributeColors(attrColorMap);
 
         // Group menu items by category
         const categoriesWithItems: Category[] = (categoriesData || []).map(
@@ -142,6 +193,26 @@ const Menu = () => {
     fetchData();
   }, [getDefaultImage]);
 
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Touch handlers for swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
   // Filter items - search across all categories or filter by active category
   const filteredItems = searchTerm
     ? // When searching, look across all categories
@@ -169,20 +240,47 @@ const Menu = () => {
       );
 
   // Pagination logic
+  const itemsPerPage = getItemsPerPage();
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const startIndex = currentPage * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentItems = filteredItems.slice(startIndex, endIndex);
 
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+
+    const distance = touchStartX.current - touchEndX.current;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && currentPage < totalPages - 1) {
+      setIsAnimating(true);
+      setCurrentPage(currentPage + 1);
+      setTimeout(() => setIsAnimating(false), 300);
+    }
+    if (isRightSwipe && currentPage > 0) {
+      setIsAnimating(true);
+      setCurrentPage(currentPage - 1);
+      setTimeout(() => setIsAnimating(false), 300);
+    }
+
+    touchStartX.current = 0;
+    touchEndX.current = 0;
+  };
+
   const goToNextPage = () => {
     if (currentPage < totalPages - 1) {
+      setIsAnimating(true);
       setCurrentPage(currentPage + 1);
+      setTimeout(() => setIsAnimating(false), 300);
     }
   };
 
   const goToPreviousPage = () => {
     if (currentPage > 0) {
+      setIsAnimating(true);
       setCurrentPage(currentPage - 1);
+      setTimeout(() => setIsAnimating(false), 300);
     }
   };
 
@@ -213,53 +311,128 @@ const Menu = () => {
     return price ? `$${price.toFixed(2)}` : '';
   };
 
-  // Normalize tags stored as array or comma-separated string
-  const normalizeTags = (tags?: string[] | string | null) => {
-    if (!tags) return [] as string[];
-    if (Array.isArray(tags)) return tags as string[];
-    if (typeof tags === 'string')
-      return tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
-    return [] as string[];
+  // Get pricing display for an item
+  const getItemPricing = (item: MenuItem) => {
+    // Handle consistent_size pricing type
+    if (
+      item.pricing_type === 'consistent_size' &&
+      item.menu_item_sizes?.length
+    ) {
+      const basePrice = parseFloat(item.price?.toString() || '0');
+      const prices = item.menu_item_sizes.map((size) => {
+        // If price_override exists, use it as final price, otherwise add to base price
+        return size.price_override !== null
+          ? parseFloat(size.price_override.toString())
+          : basePrice;
+      });
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      if (minPrice === maxPrice) {
+        return `$${minPrice.toFixed(2)}`;
+      }
+      return `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`;
+    }
+    // Handle custom_size pricing type
+    else if (item.pricing_type === 'custom_size' && item.custom_sizes?.length) {
+      const prices = item.custom_sizes.map((size) => size.price);
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      if (minPrice === maxPrice) {
+        return `$${minPrice.toFixed(2)}`;
+      }
+      return `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`;
+    }
+    // Handle legacy sizes object
+    else if (item.sizes && Object.keys(item.sizes).length > 0) {
+      return formatPrice(item.price, item.sizes);
+    }
+    // Handle fixed pricing
+    else {
+      const price = parseFloat(item.price?.toString() || '0');
+      return price ? `$${price.toFixed(2)}` : '';
+    }
   };
 
-  // Helper to pick readable text color (#000 or #fff) for a background hex color
-  const getContrastColor = (hex: string) => {
-    if (!hex) return '#000';
-    // Normalize hex
-    const cleaned = hex.replace('#', '').trim();
-    let r = 0,
-      g = 0,
-      b = 0;
-    if (cleaned.length === 3) {
-      r = parseInt(cleaned[0] + cleaned[0], 16);
-      g = parseInt(cleaned[1] + cleaned[1], 16);
-      b = parseInt(cleaned[2] + cleaned[2], 16);
-    } else if (cleaned.length === 6) {
-      r = parseInt(cleaned.substring(0, 2), 16);
-      g = parseInt(cleaned.substring(2, 4), 16);
-      b = parseInt(cleaned.substring(4, 6), 16);
-    } else {
-      // fallback
-      return '#000';
-    }
+  // Toggle item expansion
+  const toggleItemExpansion = (itemId: string) => {
+    setExpandedItems((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
 
-    // Perceived luminance
-    const luminance = (r * 299 + g * 587 + b * 114) / 1000;
-    return luminance > 150 ? '#000' : '#fff';
+  // Toggle size dropdown expansion
+  const toggleSizeExpansion = (itemId: string) => {
+    setExpandedSizes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  // Close size dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // If there are no expanded sizes or items, no need to check
+      if (expandedSizes.size === 0 && expandedItems.size === 0) return;
+
+      const target = event.target as Element;
+
+      // Check if the click is outside any size dropdown
+      if (expandedSizes.size > 0 && !target.closest('[data-size-dropdown]')) {
+        setExpandedSizes(new Set());
+      }
+
+      // Check if the click is outside any expanded item details
+      if (expandedItems.size > 0 && !target.closest('[data-expanded-item]')) {
+        setExpandedItems(new Set());
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [expandedSizes.size, expandedItems.size]);
+
+  // Check if item has multiple sizes
+  const hasMultipleSizes = (item: MenuItem) => {
+    return (
+      (item.pricing_type === 'consistent_size' &&
+        item.menu_item_sizes &&
+        item.menu_item_sizes.length > 1) ||
+      (item.pricing_type === 'custom_size' &&
+        item.custom_sizes &&
+        item.custom_sizes.length > 1) ||
+      (item.sizes && Object.keys(item.sizes).length > 1)
+    );
+  };
+
+  // Check if item has additional details to show
+  const hasAdditionalDetails = (item: MenuItem) => {
+    return (
+      (item.description && item.description.trim() !== '') ||
+      (item.tags && Array.isArray(item.tags) && item.tags.length > 0) ||
+      (item.menu_item_attributes && item.menu_item_attributes.length > 0)
+    );
   };
 
   if (loading) {
     return (
       <section
         id="menu"
-        className="relative py-12 overflow-hidden bg-white lg:py-4"
+        className="relative py-12 overflow-hidden bg-[#FAFAFA] lg:py-4"
       >
         <div className="relative z-20 px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-b-2 rounded-full animate-spin border-amber-600"></div>
+            <div className="w-8 h-8 border-b-2 rounded-full animate-spin border-[#D8A24A]"></div>
           </div>
         </div>
       </section>
@@ -270,14 +443,14 @@ const Menu = () => {
     return (
       <section
         id="menu"
-        className="relative py-12 overflow-hidden bg-white lg:py-4"
+        className="relative py-12 overflow-hidden bg-[#FAFAFA] lg:py-4"
       >
         <div className="relative z-20 px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="py-20 text-center">
-            <h2 className="mb-4 text-2xl font-bold text-amber-800">
+            <h2 className="mb-4 text-2xl font-bold text-[#3B2A20]">
               Menu Coming Soon
             </h2>
-            <p className="text-gray-600">
+            <p className="text-[#3B2A20]/70">
               Our delicious menu items will be available shortly.
             </p>
           </div>
@@ -289,7 +462,7 @@ const Menu = () => {
   return (
     <section
       id="menu"
-      className="relative py-12 overflow-hidden bg-white lg:py-4"
+      className="relative py-12 overflow-hidden bg-[#FAFAFA] lg:py-4"
     >
       {/* Mobile-only coffee beans (visible on small screens) */}
       <img
@@ -381,13 +554,13 @@ const Menu = () => {
         {/* Header */}
         <div className="mb-6 text-center lg:mb-16">
           <h2
-            className="mb-6 text-3xl font-bold lg:text-4xl xl:text-5xl text-amber-800"
+            className="mb-6 text-3xl font-bold lg:text-4xl xl:text-5xl text-[#3B2A20]"
             style={{ fontFamily: 'Prata, serif' }}
           >
             Our Menu
           </h2>
-          <div className="w-24 h-1 mx-auto mb-4 bg-amber-600"></div>
-          <p className="max-w-2xl mx-auto text-lg leading-relaxed text-gray-600 lg:text-xl">
+          <div className="w-24 h-1 mx-auto mb-4 bg-[#D8A24A]"></div>
+          <p className="max-w-2xl mx-auto text-lg leading-relaxed text-[#3B2A20]/70 lg:text-xl">
             Crafted with care, served with love
           </p>
         </div>
@@ -396,18 +569,18 @@ const Menu = () => {
         <div className="mb-4 lg:mb-12">
           <div className="max-w-md mx-auto">
             <div className="relative">
-              <Search className="absolute w-5 h-5 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+              <Search className="absolute w-5 h-5 text-[#3B2A20]/50 transform -translate-y-1/2 left-3 top-1/2" />
               <input
                 type="text"
                 placeholder="Search across all menu items..."
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full py-3 pl-10 pr-4 transition-all duration-200 border border-gray-200 rounded-full outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                className="w-full px-4 py-3 pl-10 pr-4 text-[#3B2A20] transition-all duration-200 bg-white border border-[#3B2A20]/20 rounded-full outline-none placeholder-[#3B2A20]/50 focus:border-[#D8A24A] focus:ring-2 focus:ring-[#D8A24A]/20"
               />
               {searchTerm && (
                 <button
                   onClick={() => handleSearchChange('')}
-                  className="absolute text-gray-400 transform -translate-y-1/2 right-3 top-1/2 hover:text-gray-600"
+                  className="absolute text-[#3B2A20]/50 transform -translate-y-1/2 right-3 top-1/2 hover:text-[#3B2A20]"
                 >
                   ×
                 </button>
@@ -428,8 +601,8 @@ const Menu = () => {
                     onClick={() => handleCategoryChange(index)}
                     className={`flex items-center space-x-2 px-4 lg:px-6 py-2 lg:py-3 rounded-full font-medium transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
                       activeCategory === index
-                        ? 'bg-amber-600 text-white shadow-lg'
-                        : 'bg-gray-100 text-gray-700 hover:bg-amber-100'
+                        ? 'bg-[#D8A24A] text-white shadow-lg'
+                        : 'bg-white text-[#3B2A20] hover:bg-[#D8A24A]/10 border border-[#3B2A20]/20'
                     }`}
                   >
                     <Icon className="w-4 h-4 lg:w-5 lg:h-5" />
@@ -441,7 +614,8 @@ const Menu = () => {
               })}
             </div>
 
-            {/* Mobile-only category image preview: appears between categories and items on small screens */}
+            {/* Mobile-only category image preview: appears between categories and items on small screens
+                and shows a small badge with the items count (replaces the separate stats block) */}
             <div className="mt-4 mb-6 overflow-hidden rounded-2xl lg:hidden">
               <div className="relative overflow-hidden rounded-2xl">
                 <img
@@ -449,7 +623,25 @@ const Menu = () => {
                   alt={categories[activeCategory].name}
                   className="object-cover w-full transition-all duration-500 h-44"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#3B2A20]/60 to-transparent"></div>
+
+                {/* Small items-count badge on the right side of the image (mobile) */}
+                <div className="absolute top-3 right-3">
+                  <div
+                    aria-hidden="true"
+                    className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold text-white bg-[#D8A24A] rounded-full shadow-md border border-white/40"
+                    title={
+                      searchTerm
+                        ? `${filteredItems.length} search results`
+                        : `${categories[activeCategory].items.length} items`
+                    }
+                  >
+                    {searchTerm
+                      ? filteredItems.length
+                      : categories[activeCategory].items.length}
+                  </div>
+                </div>
+
                 <div className="absolute text-white bottom-3 left-4 right-4">
                   <h3 className="mb-1 text-lg font-bold transition-transform duration-300">
                     {categories[activeCategory].name}
@@ -460,119 +652,364 @@ const Menu = () => {
                 </div>
               </div>
             </div>
-
-            {/* Mobile-only category stats: moved from right column so mobile shows counts here */}
-            <div className="p-4 transition-all duration-300 shadow-sm bg-amber-50 rounded-xl lg:hidden">
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div className="transition-transform duration-200 hover:scale-105">
-                  <div className="text-2xl font-bold transition-colors duration-200 text-amber-700">
-                    {searchTerm
-                      ? filteredItems.length
-                      : categories[activeCategory].items.length}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {searchTerm ? 'Found' : 'Items'}
-                  </div>
-                </div>
-                <div className="transition-transform duration-200 hover:scale-105">
-                  <div className="text-2xl font-bold transition-colors duration-200 text-amber-700">
-                    {searchTerm
-                      ? filteredItems.filter((item) => !!item.popular).length
-                      : categories[activeCategory]?.items.filter(
-                          (item) => !!item.popular
-                        ).length || 0}
-                  </div>
-                  <div className="text-sm text-gray-600">Popular</div>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
         {/* Search Results Header */}
         {searchTerm && (
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-center text-gray-700">
+            <h3 className="text-lg font-semibold text-center text-[#3B2A20]">
               Search Results for "{searchTerm}"
             </h3>
-            <p className="text-sm text-center text-gray-500">
+            <p className="text-sm text-center text-[#3B2A20]/60">
               Found {filteredItems.length} items across all categories
             </p>
           </div>
         )}
 
         {/* Main Content */}
-        <div className="grid gap-8 mb-8 lg:grid-cols-3 lg:mb-16">
+        <div className="grid items-start gap-16 mb-8 lg:grid-cols-3 lg:mb-16">
           {/* Menu Items */}
           <div className="lg:col-span-2 lg:order-1">
-            <div className="space-y-3" id="menu-items-container">
+            <div
+              ref={containerRef}
+              className={`grid grid-cols-1 gap-3 sm:grid-cols-2 transition-all duration-300 ${
+                isAnimating
+                  ? 'opacity-80 transform scale-[0.98]'
+                  : 'opacity-100 transform scale-100'
+              }`}
+              id="menu-items-container"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               {filteredItems.length === 0 ? (
-                <div className="py-12 text-center">
-                  <p className="text-lg text-gray-500">
+                <div className="py-12 text-center sm:col-span-2">
+                  <p className="text-lg text-[#3B2A20]/60">
                     No items found matching "{searchTerm}"
                   </p>
                   <button
                     onClick={() => handleSearchChange('')}
-                    className="mt-4 font-medium transition-colors duration-200 text-amber-600 hover:text-amber-700"
+                    className="mt-4 font-medium transition-colors duration-200 text-[#D8A24A] hover:text-[#D8A24A]/80"
                   >
                     Clear search
                   </button>
                 </div>
               ) : (
                 currentItems.map((item, index) => {
-                  const tags = normalizeTags((item as MenuItem).tags);
+                  const isExpanded = expandedItems.has(item.id);
+                  const isSizeExpanded = expandedSizes.has(item.id);
+                  const showDetails = hasAdditionalDetails(item);
+                  const showSizes = hasMultipleSizes(item);
+
                   return (
                     <div
-                      key={index}
-                      className="p-3 transition-all duration-200 bg-white border border-gray-100 rounded-lg lg:p-4 hover:shadow-md hover:border-amber-200 hover:transform hover:scale-[1.01] group"
+                      key={item.id}
+                      className="overflow-visible transition-all duration-200 bg-white border border-[#3B2A20]/10 rounded-lg hover:bg-[#D8A24A]/5 group hover:border-[#D8A24A]/30"
                       style={{
                         animationDelay: `${index * 50}ms`,
                       }}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <h4 className="text-base font-semibold text-gray-800 transition-colors duration-200 lg:text-lg group-hover:text-amber-700">
+                      <div className="p-4">
+                        {/* Name and Price Row */}
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center flex-1 gap-2">
+                            <h4 className="text-sm font-medium text-[#3B2A20] transition-colors duration-200 lg:text-base group-hover:text-[#D8A24A] uppercase tracking-wide">
                               {item.name}
                             </h4>
                             {/* Show category name when searching */}
                             {searchTerm && item.categoryName && (
-                              <span className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full">
+                              <span className="px-2 py-1 text-xs font-medium text-[#3B2A20]/70 bg-[#3B2A20]/10 rounded-full">
                                 {item.categoryName}
                               </span>
                             )}
                             {item.popular && (
-                              <span className="px-2 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-700 animate-pulse">
+                              <span className="px-2 py-1 text-xs font-medium rounded-full bg-[#D8A24A]/20 text-[#D8A24A]">
                                 Popular
                               </span>
                             )}
-                            {formatPrice(item.price, item.sizes) && (
-                              <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
-                                {formatPrice(item.price, item.sizes)}
-                              </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 ml-4">
+                            <div className="text-right">
+                              {getItemPricing(item) && (
+                                <span className="text-sm font-medium text-[#3B2A20] lg:text-base">
+                                  {getItemPricing(item)}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Size dropdown button - only show if has multiple sizes */}
+                            {showSizes && (
+                              <div className="relative" data-size-dropdown>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleSizeExpansion(item.id);
+                                  }}
+                                  className="p-1 rounded-full transition-all duration-200 hover:bg-[#D8A24A]/20 text-[#3B2A20]/60 hover:text-[#D8A24A]"
+                                  aria-label={
+                                    isSizeExpanded ? 'Hide sizes' : 'Show sizes'
+                                  }
+                                >
+                                  {isSizeExpanded ? (
+                                    <ChevronUp className="w-4 h-4" />
+                                  ) : (
+                                    <ChevronDown className="w-4 h-4" />
+                                  )}
+                                </button>
+
+                                {/* Size dropdown overlay */}
+                                {isSizeExpanded && (
+                                  <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-[#3B2A20]/20 rounded-lg shadow-lg z-50 overflow-hidden">
+                                    <div className="p-3">
+                                      <h6 className="mb-2 text-xs font-medium uppercase tracking-wide text-[#3B2A20]/80">
+                                        Available Sizes
+                                      </h6>
+                                      <div className="space-y-2">
+                                        {/* Consistent size options */}
+                                        {item.pricing_type ===
+                                          'consistent_size' &&
+                                          item.menu_item_sizes &&
+                                          item.menu_item_sizes.map(
+                                            (menuSize) => {
+                                              const basePrice = parseFloat(
+                                                item.price?.toString() || '0'
+                                              );
+                                              const finalPrice =
+                                                menuSize.price_override !== null
+                                                  ? parseFloat(
+                                                      menuSize.price_override.toString()
+                                                    )
+                                                  : basePrice;
+
+                                              return (
+                                                <div
+                                                  key={menuSize.id}
+                                                  className="flex items-center justify-between p-2 bg-[#3B2A20]/5 rounded border border-[#3B2A20]/10"
+                                                >
+                                                  <span className="text-sm font-medium text-[#3B2A20]">
+                                                    {menuSize.size.name}
+                                                  </span>
+                                                  <span className="text-sm font-medium text-[#D8A24A]">
+                                                    ${finalPrice.toFixed(2)}
+                                                  </span>
+                                                </div>
+                                              );
+                                            }
+                                          )}
+
+                                        {/* Custom size options */}
+                                        {item.pricing_type === 'custom_size' &&
+                                          item.custom_sizes &&
+                                          item.custom_sizes.map((size, idx) => (
+                                            <div
+                                              key={idx}
+                                              className="flex items-center justify-between p-2 bg-[#3B2A20]/5 rounded border border-[#3B2A20]/10"
+                                            >
+                                              <span className="text-sm font-medium text-[#3B2A20]">
+                                                {size.name}
+                                              </span>
+                                              <span className="text-sm font-medium text-[#D8A24A]">
+                                                ${size.price.toFixed(2)}
+                                              </span>
+                                            </div>
+                                          ))}
+
+                                        {/* Legacy sizes object */}
+                                        {item.sizes &&
+                                          Object.keys(item.sizes).length > 1 &&
+                                          Object.entries(item.sizes).map(
+                                            ([sizeName, price]) => (
+                                              <div
+                                                key={sizeName}
+                                                className="flex items-center justify-between p-2 bg-[#3B2A20]/5 rounded border border-[#3B2A20]/10"
+                                              >
+                                                <span className="text-sm font-medium text-[#3B2A20] capitalize">
+                                                  {sizeName}
+                                                </span>
+                                                <span className="text-sm font-medium text-[#D8A24A]">
+                                                  $
+                                                  {typeof price === 'number'
+                                                    ? price.toFixed(2)
+                                                    : price}
+                                                </span>
+                                              </div>
+                                            )
+                                          )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Description and Tags Row */}
+                        <div className="relative">
+                          <div
+                            className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ${
+                              hasAdditionalDetails(item) ? 'cursor-pointer' : ''
+                            }`}
+                            onClick={() => {
+                              if (hasAdditionalDetails(item)) {
+                                toggleItemExpansion(item.id);
+                              }
+                            }}
+                          >
+                            {/* Description */}
+                            {item.description && (
+                              <div
+                                id={`description-${item.id}`}
+                                className={`flex-1 min-w-0 ${
+                                  !isExpanded ? 'line-clamp-1' : ''
+                                }`}
+                              >
+                                <p className="text-sm text-[#3B2A20]/60">
+                                  {item.description}
+                                </p>
+                              </div>
                             )}
 
-                            {/* Tags (if any) */}
-                            {tags.length > 0 &&
-                              tags.map((tag, tIdx) => {
-                                const colorKey = tag.toLowerCase();
-                                const bg =
-                                  attributeColors[colorKey] || '#E5E7EB';
-                                const text = getContrastColor(bg);
-                                return (
-                                  <span
-                                    key={tIdx}
-                                    className="px-2 py-1 text-xs font-medium rounded-full"
-                                    style={{ backgroundColor: bg, color: text }}
-                                  >
-                                    {tag}
-                                  </span>
-                                );
-                              })}
+                            {/* Tags */}
+                            <div
+                              className={`flex items-center gap-1 flex-shrink-0 ${
+                                !isExpanded ? 'max-w-[40%]' : ''
+                              }`}
+                            >
+                              {/* Attributes from tags array */}
+                              {item.tags &&
+                                Array.isArray(item.tags) &&
+                                item.tags.length > 0 &&
+                                item.tags
+                                  .slice(0, isExpanded ? item.tags.length : 2)
+                                  .map((tag, tagIndex) => (
+                                    <span
+                                      key={`tag-${tagIndex}`}
+                                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap"
+                                      style={{
+                                        backgroundColor: '#6B7280',
+                                        color: 'white',
+                                      }}
+                                    >
+                                      <Tag className="w-3 h-3" />
+                                      {tag}
+                                    </span>
+                                  ))}
+
+                              {/* Attributes from menu_item_attributes with colors */}
+                              {item.menu_item_attributes &&
+                                item.menu_item_attributes.length > 0 &&
+                                item.menu_item_attributes
+                                  .slice(
+                                    0,
+                                    isExpanded
+                                      ? item.menu_item_attributes.length
+                                      : 2
+                                  )
+                                  .map((attr, attrIndex) => (
+                                    <span
+                                      key={attr.id}
+                                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap"
+                                      style={{
+                                        backgroundColor: getAttributeColor(
+                                          attr.attribute.color,
+                                          attrIndex
+                                        ),
+                                        color: 'white',
+                                      }}
+                                    >
+                                      <Tag className="w-3 h-3" />
+                                      {attr.attribute.name}
+                                    </span>
+                                  ))}
+                            </div>
                           </div>
-                          <p className="text-sm leading-relaxed text-gray-600 transition-colors duration-200 group-hover:text-gray-700">
-                            {item.description}
-                          </p>
+
+                          {/* Expanded Details Overlay */}
+                          {isExpanded && showDetails && (
+                            <div
+                              className="absolute top-full left-0 right-0 mt-2 p-4 bg-white border border-[#3B2A20]/20 rounded-lg shadow-lg z-50"
+                              data-expanded-item
+                            >
+                              <div className="space-y-3">
+                                {/* Full Description */}
+                                {item.description && (
+                                  <div>
+                                    <h5 className="mb-2 text-xs font-medium uppercase tracking-wide text-[#3B2A20]/80">
+                                      Description
+                                    </h5>
+                                    <p className="text-sm text-[#3B2A20]/70 leading-relaxed">
+                                      {item.description}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {/* All tags */}
+                                {item.tags &&
+                                  Array.isArray(item.tags) &&
+                                  item.tags.length > 0 && (
+                                    <div>
+                                      <h5 className="mb-2 text-xs font-medium uppercase tracking-wide text-[#3B2A20]/80">
+                                        Tags
+                                      </h5>
+                                      <div className="flex flex-wrap gap-2">
+                                        {item.tags.map((tag, tagIndex) => (
+                                          <span
+                                            key={tagIndex}
+                                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full"
+                                            style={{
+                                              backgroundColor: '#6B7280',
+                                              color: 'white',
+                                            }}
+                                          >
+                                            <Tag className="w-3 h-3" />
+                                            {tag}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                {/* All Attributes */}
+                                {item.menu_item_attributes &&
+                                  item.menu_item_attributes.length > 0 && (
+                                    <div>
+                                      <h5 className="mb-2 text-xs font-medium uppercase tracking-wide text-[#3B2A20]/80">
+                                        Attributes
+                                      </h5>
+                                      <div className="flex flex-wrap gap-2">
+                                        {item.menu_item_attributes.map(
+                                          (attr, attrIndex) => (
+                                            <span
+                                              key={attr.id}
+                                              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full"
+                                              style={{
+                                                backgroundColor:
+                                                  getAttributeColor(
+                                                    attr.attribute.color,
+                                                    attrIndex
+                                                  ),
+                                                color: 'white',
+                                              }}
+                                            >
+                                              <Tag className="w-3 h-3" />
+                                              <span>{attr.attribute.name}</span>
+                                              {attr.attribute.description && (
+                                                <span className="ml-1 text-xs opacity-80">
+                                                  - {attr.attribute.description}
+                                                </span>
+                                              )}
+                                            </span>
+                                          )
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -581,27 +1018,36 @@ const Menu = () => {
               )}
             </div>
 
+            {/* Mobile swipe instruction - only show on mobile when there are multiple pages */}
+            {isMobile && totalPages > 1 && (
+              <div className="mt-4 text-center lg:hidden">
+                <p className="text-sm text-[#3B2A20]/60">
+                  💡 Swipe left or right to see more items
+                </p>
+              </div>
+            )}
+
             {/* Pagination Controls */}
             {filteredItems.length > itemsPerPage && (
-              <div className="flex items-center justify-between pt-6 mt-8 border-t border-gray-100">
+              <div className="flex items-center justify-between pt-6 mt-8 border-t border-[#3B2A20]/10">
                 <button
                   onClick={goToPreviousPage}
                   disabled={currentPage === 0}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-1 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
                     currentPage === 0
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-amber-100 text-amber-700 hover:bg-amber-200 hover:shadow-md'
+                      ? 'bg-[#3B2A20]/10 text-[#3B2A20]/40 cursor-not-allowed'
+                      : 'bg-[#D8A24A]/20 text-[#D8A24A] hover:bg-[#D8A24A]/30 hover:shadow-md'
                   }`}
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  Previous
+                  Prev
                 </button>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-[#3B2A20]/70">
                     Page {currentPage + 1} of {totalPages}
                   </span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-[#3B2A20]/50">
                     ({startIndex + 1}-{Math.min(endIndex, filteredItems.length)}{' '}
                     of {filteredItems.length})
                   </span>
@@ -610,10 +1056,10 @@ const Menu = () => {
                 <button
                   onClick={goToNextPage}
                   disabled={currentPage >= totalPages - 1}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-1 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
                     currentPage >= totalPages - 1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-amber-100 text-amber-700 hover:bg-amber-200 hover:shadow-md'
+                      ? 'bg-[#3B2A20]/10 text-[#3B2A20]/40 cursor-not-allowed'
+                      : 'bg-[#D8A24A]/20 text-[#D8A24A] hover:bg-[#D8A24A]/30 hover:shadow-md'
                   }`}
                 >
                   Next
@@ -632,7 +1078,7 @@ const Menu = () => {
                   alt={categories[activeCategory].name}
                   className="object-cover w-full h-64 transition-all duration-500 lg:h-96"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#3B2A20]/60 to-transparent"></div>
                 <div className="absolute text-white transition-all duration-300 bottom-4 left-4 right-4">
                   <h3 className="mb-2 text-xl font-bold transition-transform duration-300 transform lg:text-2xl">
                     {categories[activeCategory].name}
@@ -644,8 +1090,8 @@ const Menu = () => {
               </div>
               {/* Additional Info */}
               <div className="hidden mt-6 lg:block">
-                <div className="p-4 bg-white border border-gray-100 rounded-xl">
-                  <p className="text-sm text-center text-gray-500">
+                <div className="p-4 bg-white border border-[#3B2A20]/10 rounded-xl">
+                  <p className="text-sm text-center text-[#3B2A20]/60">
                     {searchTerm
                       ? `${filteredItems.length} search results`
                       : `${categories[activeCategory].items.length} items in this category`}

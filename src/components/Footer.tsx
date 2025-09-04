@@ -47,13 +47,13 @@ const Footer = () => {
                 textShadow: '1px 1px 3px rgba(139, 111, 71, 0.3)',
               }}
             >
-              The Shiplap Shop & Coffee House
+              Vintage Cafe Schaumburg
             </h3>
             <p
               className="mb-6 text-xl font-medium"
               style={{ color: '#c9a876' }}
             >
-              Handcrafted Coffee • Small-Town Heart
+              Woman-owned • Community-driven
             </p>
             <p
               className="max-w-md mb-10 text-base leading-relaxed"
@@ -150,9 +150,9 @@ const Footer = () => {
                   className="text-sm leading-relaxed"
                   style={{ color: '#a8a097' }}
                 >
-                  112 Yelm Ave E
+                  105 E Schaumburg Rd
                   <br />
-                  Yelm, WA 98597, USA
+                  Schaumburg, IL 60194, USA
                 </p>
               </div>
 
@@ -162,7 +162,7 @@ const Footer = () => {
                   style={{ color: '#c9a876' }}
                 />
                 <p className="text-sm" style={{ color: '#a8a097' }}>
-                  +1 (360) 200-0262
+                  +1 (630) 400-5155
                 </p>
               </div>
 
@@ -172,7 +172,7 @@ const Footer = () => {
                   style={{ color: '#c9a876' }}
                 />
                 <p className="text-sm" style={{ color: '#a8a097' }}>
-                  cyndie@theshiplapshop.com
+                  info@vintagecafeschaumburg.com
                 </p>
               </div>
             </div>

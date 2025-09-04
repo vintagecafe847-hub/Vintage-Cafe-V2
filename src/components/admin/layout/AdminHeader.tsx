@@ -1,11 +1,12 @@
 import { Button } from '../../ui/button';
-import { Menu as MenuIcon, Sun, Moon } from 'lucide-react';
+import { Menu as MenuIcon, Sun, Moon, Globe } from 'lucide-react';
 
 interface AdminHeaderProps {
   activeTab: string;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
   setMobileSidebarOpen: (open: boolean) => void;
+  onPublishChanges: () => void;
 }
 
 const getTabInfo = (activeTab: string) => {
@@ -43,6 +44,7 @@ export const AdminHeader = ({
   isDarkMode,
   toggleDarkMode,
   setMobileSidebarOpen,
+  onPublishChanges,
 }: AdminHeaderProps) => {
   const { title, description } = getTabInfo(activeTab);
 
@@ -67,6 +69,16 @@ export const AdminHeader = ({
         </div>
 
         <div className="flex items-center gap-3">
+          <div className="hidden md:block">
+            <Button
+              onClick={onPublishChanges}
+              className="bg-green-600 hover:bg-green-700 text-white"
+              size="sm"
+            >
+              <Globe className="w-4 h-4 mr-2" />
+              Publish Changes to Website
+            </Button>
+          </div>
           <Button
             variant="outline"
             size="sm"

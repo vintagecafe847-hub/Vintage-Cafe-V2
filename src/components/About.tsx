@@ -15,7 +15,11 @@ const About = () => {
   const headerRef = useRef<HTMLDivElement | null>(null);
 
   return (
-    <section id="about" className="relative py-20 bg-stone-50">
+    <section
+      id="about"
+      className="relative pt-20 bg-[#FAFAFA]"
+      style={{ overflow: 'visible' }}
+    >
       <div
         className="relative z-10 px-4 mx-auto max-w-7xl sm:px-6 lg:px-8"
         ref={containerRef}
@@ -23,15 +27,15 @@ const About = () => {
         {/* Header */}
         <div className="mb-16 text-center" ref={headerRef}>
           <h2
-            className="mb-6 text-4xl font-bold md:text-5xl text-amber-800"
+            className="mb-6 text-4xl font-bold md:text-5xl text-[#3B2A20]"
             style={{
               fontFamily: 'Prata, serif',
             }}
           >
             Our Story
           </h2>
-          <div className="w-24 h-1 mx-auto mb-6 bg-amber-600"></div>
-          <p className="max-w-3xl mx-auto text-xl leading-relaxed text-gray-600">
+          <div className="w-24 h-1 mx-auto mb-6 bg-[#D8A24A]"></div>
+          <p className="max-w-3xl mx-auto text-xl leading-relaxed text-[#3B2A20]/70">
             More than just a coffee shop – we're a community hub where neighbors
             become friends and creativity flourishes in the heart of Schaumburg.
           </p>
@@ -54,7 +58,7 @@ const About = () => {
               alt="Cafe interior with warm lighting"
               className="relative z-10 object-cover w-full transition-shadow duration-300 shadow-2xl h-96 rounded-2xl group-hover:shadow-3xl"
             />
-            <div className="absolute z-20 p-3 text-white rounded-lg shadow-lg sm:p-4 md:p-6 -bottom-3 sm:-bottom-4 md:-bottom-6 -right-3 sm:-right-4 md:-right-6 bg-amber-600 sm:rounded-xl">
+            <div className="absolute z-20 p-3 text-white rounded-lg shadow-lg sm:p-4 md:p-6 -bottom-3 sm:-bottom-4 md:-bottom-6 -right-3 sm:-right-4 md:-right-6 bg-[#D8A24A] sm:rounded-xl">
               <Coffee className="w-6 h-6 mb-1 sm:w-7 sm:h-7 sm:mb-2 md:w-8 md:h-8 md:mb-2" />
               <p className="text-xs font-semibold sm:text-sm">
                 Cozy & Relaxing
@@ -102,11 +106,11 @@ const About = () => {
 
               <h3
                 id="woman-owned"
-                className="mb-4 text-2xl font-bold text-gray-800"
+                className="mb-4 text-2xl font-bold text-[#3B2A20]"
               >
                 Woman-Owned & Community-Focused
               </h3>
-              <p className="leading-relaxed text-gray-600">
+              <p className="leading-relaxed text-[#3B2A20]/70">
                 Vintage Cafe is more than just a coffee shop – it's a community
                 hub where neighbors become friends and creativity flourishes. As
                 a proud woman-owned business, we're committed to creating a
@@ -115,10 +119,10 @@ const About = () => {
             </div>
 
             <div>
-              <h3 className="mb-4 text-2xl font-bold text-gray-800">
+              <h3 className="mb-4 text-2xl font-bold text-[#3B2A20]">
                 More Than Coffee
               </h3>
-              <p className="leading-relaxed text-gray-600">
+              <p className="leading-relaxed text-[#3B2A20]/70">
                 Beyond our carefully crafted beverages and fresh pastries, we
                 offer music lessons, meditation sessions, and creative workshops
                 upstairs. Whether you're here for your morning coffee or to
@@ -150,10 +154,10 @@ const About = () => {
           </div>
           {/* Content */}
           <div className="order-2 lg:order-1">
-            <h3 className="mb-4 text-2xl font-bold text-gray-800">
+            <h3 className="mb-4 text-2xl font-bold text-[#3B2A20]">
               Live Music & Events
             </h3>
-            <p className="mb-8 leading-relaxed text-gray-600">
+            <p className="mb-8 leading-relaxed text-[#3B2A20]/70">
               Join us on weekends for live music performances that fill our
               space with warmth and energy. Our upstairs area hosts piano,
               voice, violin, and guitar lessons, making music an integral part
@@ -164,10 +168,10 @@ const About = () => {
             <div className="space-y-4">
               {features.map((feature, index) => (
                 <div key={index} className="z-10 flex items-center space-x-3">
-                  <div className="z-10 flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-full bg-amber-100">
-                    <feature.icon className="w-5 h-5 text-amber-600" />
+                  <div className="z-10 flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-full bg-[#D8A24A]/20">
+                    <feature.icon className="w-5 h-5 text-[#D8A24A]" />
                   </div>
-                  <span className="font-medium text-gray-700">
+                  <span className="font-medium text-[#3B2A20]">
                     {feature.text}
                   </span>
                 </div>
@@ -216,19 +220,19 @@ const About = () => {
 
           <div className="grid gap-6 md:grid-cols-3">
             {/* Community First Card */}
-            <div className="relative p-6 overflow-hidden border rounded-xl border-gray-200/50 bg-white/80 backdrop-blur-sm">
-              <div className="absolute inset-0 opacity-100 bg-gradient-to-br from-amber-50/50 via-transparent to-transparent"></div>
+            <div className="relative p-6 overflow-hidden border rounded-xl border-[#3B2A20]/10 bg-white/80 backdrop-blur-sm">
+              <div className="absolute inset-0 opacity-100 bg-gradient-to-br from-[#D8A24A]/10 via-transparent to-transparent"></div>
 
               <div className="relative z-10">
-                <div className="flex items-center justify-center w-12 h-12 mb-4 rounded-lg bg-gradient-to-br from-amber-100 to-amber-50 ring-1 ring-amber-200/50">
-                  <Heart className="w-6 h-6 text-amber-600" />
+                <div className="flex items-center justify-center w-12 h-12 mb-4 rounded-lg bg-gradient-to-br from-[#D8A24A]/20 to-[#D8A24A]/10 ring-1 ring-[#D8A24A]/20">
+                  <Heart className="w-6 h-6 text-[#D8A24A]" />
                 </div>
 
-                <h4 className="mb-3 text-lg font-semibold text-gray-900">
+                <h4 className="mb-3 text-lg font-semibold text-[#3B2A20]">
                   Community First
                 </h4>
 
-                <p className="text-sm leading-relaxed text-gray-600">
+                <p className="text-sm leading-relaxed text-[#3B2A20]/70">
                   A space where everyone feels welcome and connections are made
                   over great coffee.
                 </p>
@@ -236,19 +240,19 @@ const About = () => {
             </div>
 
             {/* Music & Arts Card (kept original text) */}
-            <div className="relative p-6 overflow-hidden border rounded-xl border-gray-200/50 bg-white/80 backdrop-blur-sm">
-              <div className="absolute inset-0 opacity-100 bg-gradient-to-br from-amber-50/50 via-transparent to-transparent"></div>
+            <div className="relative p-6 overflow-hidden border rounded-xl border-[#3B2A20]/10 bg-white/80 backdrop-blur-sm">
+              <div className="absolute inset-0 opacity-100 bg-gradient-to-br from-[#D8A24A]/10 via-transparent to-transparent"></div>
 
               <div className="relative z-10">
-                <div className="flex items-center justify-center w-12 h-12 mb-4 rounded-lg bg-gradient-to-br from-amber-100 to-amber-50 ring-1 ring-amber-200/50">
-                  <Music className="w-6 h-6 text-amber-600" />
+                <div className="flex items-center justify-center w-12 h-12 mb-4 rounded-lg bg-gradient-to-br from-[#D8A24A]/20 to-[#D8A24A]/10 ring-1 ring-[#D8A24A]/20">
+                  <Music className="w-6 h-6 text-[#D8A24A]" />
                 </div>
 
-                <h4 className="mb-3 text-lg font-semibold text-gray-900">
+                <h4 className="mb-3 text-lg font-semibold text-[#3B2A20]">
                   Music & Arts
                 </h4>
 
-                <p className="text-sm leading-relaxed text-gray-600">
+                <p className="text-sm leading-relaxed text-[#3B2A20]/70">
                   Fostering creativity through music lessons, live performances,
                   and artistic expression.
                 </p>
@@ -256,19 +260,19 @@ const About = () => {
             </div>
 
             {/* Quality Crafted Card */}
-            <div className="relative p-6 overflow-hidden border rounded-xl border-gray-200/50 bg-white/80 backdrop-blur-sm">
-              <div className="absolute inset-0 opacity-100 bg-gradient-to-br from-amber-50/50 via-transparent to-transparent"></div>
+            <div className="relative p-6 overflow-hidden border rounded-xl border-[#3B2A20]/10 bg-white/80 backdrop-blur-sm">
+              <div className="absolute inset-0 opacity-100 bg-gradient-to-br from-[#D8A24A]/10 via-transparent to-transparent"></div>
 
               <div className="relative z-10">
-                <div className="flex items-center justify-center w-12 h-12 mb-4 rounded-lg bg-gradient-to-br from-amber-100 to-amber-50 ring-1 ring-amber-200/50">
-                  <Award className="w-6 h-6 text-amber-600" />
+                <div className="flex items-center justify-center w-12 h-12 mb-4 rounded-lg bg-gradient-to-br from-[#D8A24A]/20 to-[#D8A24A]/10 ring-1 ring-[#D8A24A]/20">
+                  <Award className="w-6 h-6 text-[#D8A24A]" />
                 </div>
 
-                <h4 className="mb-3 text-lg font-semibold text-gray-900">
+                <h4 className="mb-3 text-lg font-semibold text-[#3B2A20]">
                   Quality Crafted
                 </h4>
 
-                <p className="text-sm leading-relaxed text-gray-600">
+                <p className="text-sm leading-relaxed text-[#3B2A20]/70">
                   Every cup and pastry is made with care, using the finest
                   ingredients and techniques.
                 </p>
