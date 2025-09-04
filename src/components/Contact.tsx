@@ -152,14 +152,14 @@ const Contact = () => {
           src="/icons/corner.svg"
           alt=""
           aria-hidden="true"
-          className="absolute top-0 left-0 z-0 pointer-events-none w-44 md:w-64 lg:w-72 md:block"
+          className="absolute top-0 left-0 z-0 pointer-events-none w-36 md:w-64 lg:w-72 md:block"
         />
         {/* Decorative corner image - positioned on the right side, horizontally flipped */}
         <img
           src="/icons/corner.svg"
           alt=""
           aria-hidden="true"
-          className="absolute top-0 right-0 z-0  pointer-events-none w-44 md:w-64 lg:w-72 md:block scale-x-[-1]"
+          className="absolute top-0 right-0 z-0 pointer-events-none w-36 md:w-64 lg:w-72 md:block scale-x-[-1]"
         />
         {/* Decorative carton images - positioned symmetrically */}
         {/* Bulky vine decorations - positioned at bottom */}

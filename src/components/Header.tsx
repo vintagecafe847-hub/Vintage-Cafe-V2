@@ -99,7 +99,7 @@ const Header = () => {
               {[
                 { name: 'Home', id: 'hero', type: 'scroll' },
                 { name: 'About', id: 'about', type: 'scroll' },
-                { name: 'Menu', id: '/menu', type: 'navigate' },
+                { name: 'Menu', id: 'menu', type: 'scroll' },
                 { name: 'Contact', id: 'contact', type: 'scroll' },
               ].map((item) => (
                 <button
@@ -132,7 +132,7 @@ const Header = () => {
             <div className="flex items-center space-x-4">
               <div className="hidden space-x-4 md:flex">
                 <a
-                  href="https://www.instagram.com/theshiplapshop/"
+                  href="https://www.instagram.com/vintagecafeschaumburg/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`transition-colors duration-200 ${
@@ -147,7 +147,7 @@ const Header = () => {
                   <Instagram size={24} />
                 </a>
                 <a
-                  href="https://www.facebook.com/theshiplapshop/"
+                  href="https://www.facebook.com/vintagecafeschaumburg"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`transition-colors duration-200 ${
@@ -190,7 +190,7 @@ const Header = () => {
               {[
                 { name: 'Home', id: 'hero', type: 'scroll' },
                 { name: 'About', id: 'about', type: 'scroll' },
-                { name: 'Menu', id: '/menu', type: 'navigate' },
+                { name: 'Menu', id: 'menu', type: 'scroll' },
                 { name: 'Contact', id: 'contact', type: 'scroll' },
               ].map((item) => (
                 <button
@@ -207,7 +207,7 @@ const Header = () => {
               ))}
               <div className="flex items-center justify-center px-6 pt-4 space-x-6">
                 <a
-                  href="https://www.instagram.com/theshiplapshop/"
+                  href="https://www.instagram.com/vintagecafeschaumburg/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-white transition-colors duration-200 hover:text-[#D8A24A]"
@@ -215,7 +215,7 @@ const Header = () => {
                   <Instagram size={24} />
                 </a>
                 <a
-                  href="https://www.facebook.com/theshiplapshop/"
+                  href="https://www.facebook.com/vintagecafeschaumburg"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-white transition-colors duration-200 hover:text-[#D8A24A]"

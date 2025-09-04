@@ -28,11 +28,11 @@ const Hero = () => {
       <div className="relative z-10 px-6 pt-12 mx-auto max-w-8xl sm:px-8 lg:px-12 sm:pt-24 lg:pt-8">
         <div className="flex flex-col items-center gap-8 lg:grid lg:grid-cols-2 lg:gap-8">
           {/* Hero Coffee Blob - First on mobile */}
-          <div className="relative flex items-center justify-center mt-2 sm:mt-6 lg:justify-end lg:order-2 lg:mt-0 lg:pl-8">
+          <div className="relative flex items-center justify-center mt-2 transform -translate-y-6 sm:mt-6 lg:justify-end lg:order-2 lg:mt-0 lg:pl-8 sm:translate-y-0">
             <img
               src="/icons/hero-coffee-blob.svg"
               alt="Decorative coffee blob"
-              className="w-full max-w-[420px] sm:max-w-[600px] lg:max-w-[700px]"
+              className="w-full max-w-[360px] sm:max-w-[600px] lg:max-w-[700px]"
             />
           </div>
           {/* Decorative minimal lines in the bottom-right of the hero */}

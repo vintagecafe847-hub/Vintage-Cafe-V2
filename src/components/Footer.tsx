@@ -189,7 +189,7 @@ const Footer = () => {
             </h4>
             <div className="flex space-x-4">
               <a
-                href="https://www.instagram.com/theshiplapshop/"
+                href="https://www.instagram.com/vintagecafeschaumburg/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center w-12 h-12 transition-all duration-300 transform rounded-full group hover:scale-110"
@@ -213,7 +213,7 @@ const Footer = () => {
                 <Instagram className="w-6 h-6" style={{ color: '#c9a876' }} />
               </a>
               <a
-                href="https://www.facebook.com/theshiplapshop/"
+                href="https://www.facebook.com/vintagecafeschaumburg"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center w-12 h-12 transition-all duration-300 transform rounded-full group hover:scale-110"

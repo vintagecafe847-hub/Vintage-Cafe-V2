@@ -97,23 +97,34 @@ const Menu = () => {
 
   // Helper function to get attribute color
   const getAttributeColor = (color?: string, index?: number) => {
-    if (color) return color;
+    // Debug: log the color being passed
+    console.log('getAttributeColor called with:', { color, index });
 
-    // Predefined colors for attributes
-    const attributeColors = [
-      '#D8A24A', // Golden
-      '#8B4513', // Brown
-      '#228B22', // Forest Green
-      '#FF6347', // Tomato
-      '#4682B4', // Steel Blue
-      '#9370DB', // Medium Purple
-      '#DC143C', // Crimson
-      '#FF8C00', // Dark Orange
-      '#32CD32', // Lime Green
-      '#FF1493', // Deep Pink
-    ];
+    // If color is provided and not empty, use it
+    if (color && color.trim() !== '') {
+      const trimmedColor = color.trim();
 
-    return attributeColors[(index || 0) % attributeColors.length];
+      // If it already starts with #, return as-is
+      if (trimmedColor.startsWith('#')) {
+        console.log('Returning color with #:', trimmedColor);
+        return trimmedColor;
+      }
+
+      // If it's 6 hex characters without #, add the #
+      if (trimmedColor.match(/^[0-9A-Fa-f]{6}$/)) {
+        const colorWithHash = `#${trimmedColor}`;
+        console.log('Adding # to color:', colorWithHash);
+        return colorWithHash;
+      }
+
+      // Return as-is for named colors or other formats
+      console.log('Returning color as-is:', trimmedColor);
+      return trimmedColor;
+    }
+
+    // No fallback colors - return a default gray if no color provided
+    console.log('No color provided, returning default gray');
+    return '#6B7280'; // Gray color
   };
 
   // Fetch categories and menu items from Supabase
@@ -850,10 +861,15 @@ const Menu = () => {
                         <div className="relative">
                           <div
                             className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ${
-                              hasAdditionalDetails(item) ? 'cursor-pointer' : ''
+                              hasAdditionalDetails(item)
+                                ? 'cursor-pointer hover:bg-[#D8A24A]/5 rounded-md p-1 -m-1'
+                                : ''
                             }`}
                             onClick={() => {
                               if (hasAdditionalDetails(item)) {
+                                console.log(
+                                  `Toggling expansion for item: ${item.name}, currently expanded: ${isExpanded}`
+                                );
                                 toggleItemExpansion(item.id);
                               }
                             }}
@@ -889,7 +905,10 @@ const Menu = () => {
                                       key={`tag-${tagIndex}`}
                                       className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap"
                                       style={{
-                                        backgroundColor: '#6B7280',
+                                        backgroundColor: getAttributeColor(
+                                          undefined,
+                                          tagIndex
+                                        ),
                                         color: 'white',
                                       }}
                                     >
@@ -908,22 +927,26 @@ const Menu = () => {
                                       ? item.menu_item_attributes.length
                                       : 2
                                   )
-                                  .map((attr, attrIndex) => (
-                                    <span
-                                      key={attr.id}
-                                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap"
-                                      style={{
-                                        backgroundColor: getAttributeColor(
-                                          attr.attribute.color,
-                                          attrIndex
-                                        ),
-                                        color: 'white',
-                                      }}
-                                    >
-                                      <Tag className="w-3 h-3" />
-                                      {attr.attribute.name}
-                                    </span>
-                                  ))}
+                                  .map((attr, attrIndex) => {
+                                    const backgroundColor = getAttributeColor(
+                                      attr.attribute.color,
+                                      attrIndex
+                                    );
+
+                                    return (
+                                      <span
+                                        key={attr.id}
+                                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap"
+                                        style={{
+                                          backgroundColor,
+                                          color: 'white',
+                                        }}
+                                      >
+                                        <Tag className="w-3 h-3" />
+                                        {attr.attribute.name}
+                                      </span>
+                                    );
+                                  })}
                             </div>
                           </div>
 
