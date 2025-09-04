@@ -132,7 +132,10 @@ export const AdminSidebar = ({
         <div className="hidden p-2 border-b border-zinc-200 lg:block dark:border-zinc-800">
           <Button
             variant="outline"
-            onClick={onSignOut}
+            onClick={() => {
+              onSignOut();
+              navigate('/');
+            }}
             className="w-full text-zinc-700 border-zinc-300 dark:border-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
           >
             <LogOut className="w-4 h-4 mr-2" />
@@ -163,7 +166,10 @@ export const AdminSidebar = ({
         <div className="p-2 border-t border-zinc-200 lg:hidden dark:border-zinc-800">
           <Button
             variant="outline"
-            onClick={onSignOut}
+            onClick={() => {
+              onSignOut();
+              navigate('/');
+            }}
             className="w-full text-zinc-700 border-zinc-300 dark:border-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
           >
             <LogOut className="w-4 h-4 mr-2" />
