@@ -26,7 +26,7 @@ const Hero = () => {
 
       {/* Content Container */}
       <div className="relative z-10 px-6 pt-12 mx-auto max-w-8xl sm:px-8 lg:px-12 sm:pt-24 lg:pt-8">
-        <div className="flex flex-col items-center gap-8 lg:grid lg:grid-cols-2 lg:gap-8">
+        <div className="flex flex-col items-center gap-2 lg:grid lg:grid-cols-2 lg:gap-8">
           {/* Hero Coffee Blob - First on mobile */}
           <div className="relative flex items-center justify-center mt-2 transform -translate-y-6 sm:mt-6 lg:justify-end lg:order-2 lg:mt-0 lg:pl-8 sm:translate-y-0">
             <img
