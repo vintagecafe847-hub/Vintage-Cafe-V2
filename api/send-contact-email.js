@@ -41,16 +41,49 @@ export default async function handler(req, res) {
 
     const { name, email, phone, subject, message } = req.body;
 
-    // Log for debugging (remove in production)
-    console.log('Processing contact form submission:', {
-      name,
-      email,
-      subject,
-    });
-    console.log('API Key configured:', !!process.env.RESEND_API_KEY);
+    // Input sanitization and validation
+    const sanitizeInput = (input) => {
+      if (typeof input !== 'string') return '';
+      return input
+        .trim()
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    };
 
-    // Validation
-    if (!name || !email || !subject || !message) {
+    const sanitizedName = sanitizeInput(name);
+    const sanitizedEmail = sanitizeInput(email);
+    const sanitizedPhone = sanitizeInput(phone);
+    const sanitizedSubject = sanitizeInput(subject);
+    const sanitizedMessage = sanitizeInput(message);
+
+    // Length validation to prevent spam
+    if (sanitizedName.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name must be less than 100 characters',
+      });
+    }
+
+    if (sanitizedSubject.length > 200) {
+      return res.status(400).json({
+        success: false,
+        message: 'Subject must be less than 200 characters',
+      });
+    }
+
+    if (sanitizedMessage.length > 5000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Message must be less than 5000 characters',
+      });
+    }
+
+    // Required field validation
+    if (
+      !sanitizedName ||
+      !sanitizedEmail ||
+      !sanitizedSubject ||
+      !sanitizedMessage
+    ) {
       return res.status(400).json({
         success: false,
         message:
@@ -58,9 +91,10 @@ export default async function handler(req, res) {
       });
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Email validation (more robust)
+    const emailRegex =
+      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    if (!emailRegex.test(sanitizedEmail)) {
       return res.status(400).json({
         success: false,
         message: 'Please provide a valid email address',
@@ -68,10 +102,9 @@ export default async function handler(req, res) {
     }
 
     // Phone validation (optional but validate if provided)
-    if (phone) {
-      // Basic phone validation - should contain only numbers, spaces, hyphens, parentheses, plus
-      const phoneRegex = /^[\+]?[\d\s\-\(\)]+$/;
-      if (!phoneRegex.test(phone)) {
+    if (sanitizedPhone) {
+      const phoneRegex = /^[\+]?[\d\s\-\(\)]{7,20}$/;
+      if (!phoneRegex.test(sanitizedPhone)) {
         return res.status(400).json({
           success: false,
           message: 'Please provide a valid phone number',
@@ -79,9 +112,25 @@ export default async function handler(req, res) {
       }
     }
 
-    // Send email notification via Resend
-    console.log('Attempting to send email via Resend...');
+    // Spam detection - basic patterns
+    const spamPatterns = [
+      /viagra|cialis|casino|lottery|winner|congratulations/i,
+      /click here|visit our website|make money|get rich/i,
+      /urgent|act now|limited time|expire/i,
+    ];
 
+    const textToCheck =
+      `${sanitizedName} ${sanitizedSubject} ${sanitizedMessage}`.toLowerCase();
+    const isSpam = spamPatterns.some((pattern) => pattern.test(textToCheck));
+
+    if (isSpam) {
+      return res.status(400).json({
+        success: false,
+        message: 'Message appears to be spam and cannot be processed',
+      });
+    }
+
+    // Send email notification via Resend
     const emailData = await resend.emails.send({
       from: 'Vintage Cafe Contact <onboarding@resend.dev>',
       to: ['sallam.mn@gmail.com'],
@@ -94,15 +143,19 @@ export default async function handler(req, res) {
           
           <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d97706;">
             <h3 style="margin-top: 0; color: #92400e;">Contact Details</h3>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ''}
-            <p><strong>Subject:</strong> ${subject}</p>
+            <p><strong>Name:</strong> ${sanitizedName}</p>
+            <p><strong>Email:</strong> ${sanitizedEmail}</p>
+            ${
+              sanitizedPhone
+                ? `<p><strong>Phone:</strong> ${sanitizedPhone}</p>`
+                : ''
+            }
+            <p><strong>Subject:</strong> ${sanitizedSubject}</p>
           </div>
 
           <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="margin-top: 0; color: #374151;">Message</h3>
-            <p style="white-space: pre-wrap; color: #374151; line-height: 1.6;">${message}</p>
+            <p style="white-space: pre-wrap; color: #374151; line-height: 1.6;">${sanitizedMessage}</p>
           </div>
 
           <div style="background-color: #ecfdf5; padding: 15px; border-radius: 8px; margin: 20px 0;">
@@ -121,11 +174,9 @@ export default async function handler(req, res) {
 
     // Check if email was sent successfully
     if (emailData && emailData.id) {
-      console.log('Email sent successfully with ID:', emailData.id);
       return res.status(200).json({
         success: true,
         message: "Message sent successfully! We'll get back to you soon.",
-        emailId: emailData.id, // Include for debugging
       });
     } else {
       console.error('Email sending failed - no ID returned:', emailData);
