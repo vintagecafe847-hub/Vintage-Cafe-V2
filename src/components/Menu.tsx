@@ -885,14 +885,14 @@ const Menu = () => {
                                 id={`description-${item.id}`}
                                 className="flex-1 min-w-0 line-clamp-1"
                               >
-                                <p className="text-sm text-[#3B2A20]/60">
+                                <p className="text-sm text-[#3B2A20]/60 truncate">
                                   {item.description}
                                 </p>
                               </div>
                             )}
 
                             {/* Tags */}
-                            <div className="flex items-center gap-1 flex-shrink-0 max-w-[40%]">
+                            <div className="flex items-center flex-shrink-0 gap-1 ml-auto">
                               {(() => {
                                 // Combine both tags and attributes into a single array
                                 const allTags: Array<{
@@ -941,8 +941,11 @@ const Menu = () => {
                                   );
                                 }
 
-                                // Always limit to 2 tags in the card (regardless of expansion state)
-                                const displayTags = allTags.slice(0, 2);
+                                // Show 1 tag by default, but if there are exactly 2 tags total, show both
+                                const shouldShowBothTags = allTags.length === 2;
+                                const displayTags = shouldShowBothTags
+                                  ? allTags.slice(0, 2)
+                                  : allTags.slice(0, 1);
                                 const hasMoreTags = allTags.length > 2;
 
                                 return (
@@ -962,7 +965,7 @@ const Menu = () => {
                                     ))}
                                     {hasMoreTags && (
                                       <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-[#D8A24A] bg-[#D8A24A]/10 rounded-full">
-                                        +{allTags.length - 2} more
+                                        +{allTags.length - 1} more
                                       </span>
                                     )}
                                   </>
